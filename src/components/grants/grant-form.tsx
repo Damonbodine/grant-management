@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 interface GrantFormProps {
   grantId?: Id<"grants">;
@@ -15,8 +16,8 @@ interface GrantFormProps {
 }
 
 export function GrantForm({ grantId, onSuccess }: GrantFormProps) {
-  const grant = useQuery(api.grants.getGrant, grantId ? { id: grantId } : "skip");
-  const funders = useQuery(api.funders.listFunders, {});
+  const grant = useAuthedQuery(api.grants.getGrant, grantId ? { id: grantId } : "skip");
+  const funders = useAuthedQuery(api.funders.listFunders, {});
   const createGrant = useMutation(api.grants.createGrant);
   const updateGrant = useMutation(api.grants.updateGrant);
 
@@ -47,14 +48,14 @@ export function GrantForm({ grantId, onSuccess }: GrantFormProps) {
     e.preventDefault();
     const deadlineMs = new Date(form.deadline).getTime();
     if (grantId) {
-      await updateGrant({ id: grantId, name: form.name, category: form.category as any, status: form.status as any, deadline: deadlineMs, amountMin: form.amountMin ? Number(form.amountMin) : undefined, amountMax: form.amountMax ? Number(form.amountMax) : undefined, eligibilityRequirements: form.eligibilityRequirements || undefined, description: form.description || undefined, isRecurring: form.isRecurring });
+      await updateGrant({ id: grantId, name: form.name, category: form.category as "General Operating" | "Program" | "Capital" | "Capacity Building" | "Research" | "Emergency" | "Other", status: form.status as "Researching" | "Upcoming" | "Open" | "Closed" | "Archived", deadline: deadlineMs, amountMin: form.amountMin ? Number(form.amountMin) : undefined, amountMax: form.amountMax ? Number(form.amountMax) : undefined, eligibilityRequirements: form.eligibilityRequirements || undefined, description: form.description || undefined, isRecurring: form.isRecurring });
     } else {
-      await createGrant({ funderId: form.funderId as Id<"funders">, name: form.name, category: form.category as any, status: form.status as any, deadline: deadlineMs, isRecurring: form.isRecurring, amountMin: form.amountMin ? Number(form.amountMin) : undefined, amountMax: form.amountMax ? Number(form.amountMax) : undefined, eligibilityRequirements: form.eligibilityRequirements || undefined, description: form.description || undefined });
+      await createGrant({ funderId: form.funderId as Id<"funders">, name: form.name, category: form.category as "General Operating" | "Program" | "Capital" | "Capacity Building" | "Research" | "Emergency" | "Other", status: form.status as "Researching" | "Upcoming" | "Open" | "Closed" | "Archived", deadline: deadlineMs, isRecurring: form.isRecurring, amountMin: form.amountMin ? Number(form.amountMin) : undefined, amountMax: form.amountMax ? Number(form.amountMax) : undefined, eligibilityRequirements: form.eligibilityRequirements || undefined, description: form.description || undefined });
     }
     onSuccess();
   };
 
-  const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: string, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

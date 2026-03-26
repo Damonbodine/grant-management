@@ -9,7 +9,7 @@ export const listGrants = query({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return [];
     if (args.status !== undefined) {
       const byStatus = await ctx.db
         .query("grants")
@@ -59,7 +59,7 @@ export const createGrant = mutation({
     matchPercentage: v.optional(v.float64()),
   },
   handler: async (ctx, args) => {
-    const caller = await requireRole(ctx, ["Admin", "GrantManager"]);
+    const caller = await requireRole(ctx, ["Admin", "GrantManager", "GrantWriter"]);
     const funder = await ctx.db.get(args.funderId);
     if (!funder) throw new Error("NOT_FOUND");
     const now = Date.now();
@@ -93,7 +93,7 @@ export const updateGrant = mutation({
     status: v.optional(v.union(v.literal("Researching"), v.literal("Upcoming"), v.literal("Open"), v.literal("Closed"), v.literal("Archived"))),
   },
   handler: async (ctx, args) => {
-    const caller = await requireRole(ctx, ["Admin", "GrantManager"]);
+    const caller = await requireRole(ctx, ["Admin", "GrantManager", "GrantWriter"]);
     const existing = await ctx.db.get(args.id);
     if (!existing) throw new Error("NOT_FOUND");
     const { id, ...fields } = args;
@@ -111,6 +111,14 @@ export const deleteGrant = mutation({
     const caller = await requireRole(ctx, ["Admin"]);
     const existing = await ctx.db.get(args.id);
     if (!existing) throw new Error("NOT_FOUND");
+    // Check for related applications — prevent delete if any exist
+    const relatedApps = await ctx.db
+      .query("applications")
+      .withIndex("by_grantId", (q) => q.eq("grantId", args.id))
+      .collect();
+    if (relatedApps.length > 0) {
+      throw new Error("CANNOT_DELETE: Grant has related applications. Delete or reassign them first.");
+    }
     await ctx.db.delete(args.id);
     await writeAuditLog(ctx, caller._id, "Delete", "grants", args.id, `Deleted grant ${existing.name}`);
   },

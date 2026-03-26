@@ -2,7 +2,7 @@
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState } from "react";
-import { useQuery } from "convex/react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,10 +10,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@clerk/nextjs";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function ExpenditureForm({ awardId, onSuccess }: { awardId: string; onSuccess: () => void }) {
   const createExpenditure = useMutation(api.expenditures.createExpenditure);
-  const users = useQuery(api.users.listUsers, {});
+  const users = useAuthedQuery(api.users.listUsers, {});
   const { user: clerkUser } = useUser();
 
   const [form, setForm] = useState({
@@ -28,11 +29,11 @@ export function ExpenditureForm({ awardId, onSuccess }: { awardId: string; onSuc
     const currentUser = users?.find((u: typeof users[number]) => u.clerkId === clerkUser?.id);
     if (!currentUser) return;
     await createExpenditure({
-      awardId: awardId as any,
+      awardId: awardId as Id<"awards">,
       recordedById: currentUser._id,
       description: form.description,
       amount: Number(form.amount),
-      category: form.category as any,
+      category: form.category as "Personnel" | "Supplies" | "Travel" | "Equipment" | "Contractual" | "Indirect" | "Other",
       date: new Date(form.date).getTime(),
       vendor: form.vendor || undefined,
       receiptUrl: form.receiptUrl || undefined,

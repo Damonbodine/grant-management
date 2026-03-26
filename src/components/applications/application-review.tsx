@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,12 +13,13 @@ import { CheckCircle, RotateCcw } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function ApplicationReview({ applicationId }: { applicationId: string }) {
   const router = useRouter();
-  const application = useQuery(api.applications.getApplication, { id: applicationId as any });
-  const grant = useQuery(api.grants.getGrant, application?.grantId ? { id: application.grantId } : "skip");
-  const users = useQuery(api.users.listUsers, {});
+  const application = useAuthedQuery(api.applications.getApplication, { id: applicationId as Id<"applications"> });
+  const grant = useAuthedQuery(api.grants.getGrant, application?.grantId ? { id: application.grantId } : "skip");
+  const users = useAuthedQuery(api.users.listUsers, {});
   const approveApp = useMutation(api.applications.approveApplication);
   const returnToDraft = useMutation(api.applications.returnApplicationToDraft);
   const createNote = useMutation(api.applicationNotes.createApplicationNote);
@@ -37,12 +38,12 @@ export function ApplicationReview({ applicationId }: { applicationId: string }) 
   const handleConfirm = async () => {
     if (!currentUser) return;
     if (action === "approve") {
-      await approveApp({ id: applicationId as any, reviewedById: currentUser._id });
+      await approveApp({ id: applicationId as Id<"applications">, reviewedById: currentUser._id });
     } else {
-      await returnToDraft({ id: applicationId as any, reason });
+      await returnToDraft({ id: applicationId as Id<"applications">, reason });
     }
     if (reason) {
-      await createNote({ applicationId: applicationId as any, authorId: currentUser._id, content: reason, isPinned: false, isInternal: true });
+      await createNote({ applicationId: applicationId as Id<"applications">, authorId: currentUser._id, content: reason, isPinned: false, isInternal: true });
     }
     setDialogOpen(false);
     router.push(`/applications/${applicationId}`);

@@ -1,8 +1,64 @@
-import { internalMutation } from "./_generated/server";
+import { internalMutation, mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+// Temporary: promote any authenticated user to Admin so the test user can access all features
+export const promoteToAdmin = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("UNAUTHORIZED");
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first();
+    if (existing) {
+      await ctx.db.patch(existing._id, { role: "Admin" });
+      return { message: `Promoted ${existing.name} to Admin`, userId: existing._id };
+    }
+    // Create as Admin if doesn't exist
+    const now = Date.now();
+    const id = await ctx.db.insert("users", {
+      clerkId: identity.subject,
+      name: identity.name ?? "Test Admin",
+      email: identity.email ?? "test@example.com",
+      role: "Admin",
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return { message: `Created Admin user`, userId: id };
+  },
+});
+
+async function clearTable(ctx: any, tableName: string) {
+  const rows = await ctx.db.query(tableName).collect();
+  for (const row of rows) {
+    await ctx.db.delete(row._id);
+  }
+  return rows.length;
+}
 
 export const seedDatabase = internalMutation({
   args: {},
   handler: async (ctx) => {
+    // Clear all existing data in reverse dependency order
+    await clearTable(ctx, "auditLogs");
+    await clearTable(ctx, "notifications");
+    await clearTable(ctx, "reports");
+    await clearTable(ctx, "expenditures");
+    await clearTable(ctx, "awards");
+    await clearTable(ctx, "applicationNotes");
+    await clearTable(ctx, "applicationTasks");
+    await clearTable(ctx, "applications");
+    await clearTable(ctx, "grants");
+    await clearTable(ctx, "funders");
+    await clearTable(ctx, "organizations");
+    await clearTable(ctx, "users");
+
+    // All dates are relative to "now" = March 26, 2026
+    const NOW = new Date("2026-03-26T12:00:00Z").getTime();
+    const DAY = 86400000;
+
     // ─── Users ────────────────────────────────────────────────────────────────
     const aliceId = await ctx.db.insert("users", {
       clerkId: "clerk_admin_001",
@@ -14,8 +70,8 @@ export const seedDatabase = internalMutation({
       title: "Executive Director",
       department: "Leadership",
       isActive: true,
-      createdAt: 1704067200000,
-      updatedAt: 1704067200000,
+      createdAt: NOW - 365 * DAY,
+      updatedAt: NOW - 365 * DAY,
     });
 
     const bobId = await ctx.db.insert("users", {
@@ -28,8 +84,8 @@ export const seedDatabase = internalMutation({
       title: "Director of Development",
       department: "Development",
       isActive: true,
-      createdAt: 1704153600000,
-      updatedAt: 1704153600000,
+      createdAt: NOW - 364 * DAY,
+      updatedAt: NOW - 364 * DAY,
     });
 
     const carolId = await ctx.db.insert("users", {
@@ -42,8 +98,8 @@ export const seedDatabase = internalMutation({
       title: "Grant Writer",
       department: "Development",
       isActive: true,
-      createdAt: 1704240000000,
-      updatedAt: 1704240000000,
+      createdAt: NOW - 363 * DAY,
+      updatedAt: NOW - 363 * DAY,
     });
 
     const daveId = await ctx.db.insert("users", {
@@ -56,8 +112,8 @@ export const seedDatabase = internalMutation({
       title: "Finance Manager",
       department: "Finance",
       isActive: true,
-      createdAt: 1704326400000,
-      updatedAt: 1704326400000,
+      createdAt: NOW - 362 * DAY,
+      updatedAt: NOW - 362 * DAY,
     });
 
     // ─── Organization ─────────────────────────────────────────────────────────
@@ -74,7 +130,7 @@ export const seedDatabase = internalMutation({
       website: "https://www.hopewellcommunityservices.org",
       annualBudget: 2800000,
       fiscalYearEnd: "December 31",
-      createdAt: 1704067200000,
+      createdAt: NOW - 365 * DAY,
     });
 
     // ─── Funders ──────────────────────────────────────────────────────────────
@@ -92,8 +148,8 @@ export const seedDatabase = internalMutation({
       notes:
         "Strong relationship built over 3 grant cycles. Program officer is Sarah Kellerman. Prefers multi-year funding commitments.",
       relationshipStatus: "Active",
-      createdAt: 1704067200000,
-      updatedAt: 1704067200000,
+      createdAt: NOW - 365 * DAY,
+      updatedAt: NOW - 30 * DAY,
     });
 
     const thhsId = await ctx.db.insert("funders", {
@@ -110,8 +166,8 @@ export const seedDatabase = internalMutation({
       notes:
         "Requires extensive compliance documentation. Must have 3 years of audited financials on file. Reporting is rigorous — monthly financial draws.",
       relationshipStatus: "Active",
-      createdAt: 1704153600000,
-      updatedAt: 1704153600000,
+      createdAt: NOW - 300 * DAY,
+      updatedAt: NOW - 14 * DAY,
     });
 
     const dtfId = await ctx.db.insert("funders", {
@@ -128,14 +184,15 @@ export const seedDatabase = internalMutation({
       notes:
         "New relationship cultivated at Austin Community Foundation gala. Interested in our digital literacy program for workforce participants.",
       relationshipStatus: "Cultivating",
-      createdAt: 1706745600000,
-      updatedAt: 1706745600000,
+      createdAt: NOW - 200 * DAY,
+      updatedAt: NOW - 7 * DAY,
     });
 
     // ─── Grants ───────────────────────────────────────────────────────────────
+    // Grant 1: ACF — closed grant (awarded already), deadline in recent past
     const grantAcfId = await ctx.db.insert("grants", {
       funderId: acfId,
-      name: "ACF Health Equity Initiative 2024",
+      name: "ACF Health Equity Initiative 2026",
       description:
         "Supports organizations working to address the root causes of poor health by investing in community-led solutions that advance health equity and well-being across Central Texas.",
       category: "Program",
@@ -143,22 +200,23 @@ export const seedDatabase = internalMutation({
       amountMax: 250000,
       eligibilityRequirements:
         "501(c)(3) organizations operating for at least 3 years with demonstrated focus on health equity. Must serve populations in priority geographies within Travis County.",
-      applicationUrl: "https://www.austincf.org/apply/health-equity-2024",
-      openDate: 1704067200000,
-      deadline: 1709251200000,
-      announcementDate: 1714521600000,
+      applicationUrl: "https://www.austincf.org/apply/health-equity-2026",
+      openDate: NOW - 120 * DAY,
+      deadline: NOW - 30 * DAY,
+      announcementDate: NOW - 10 * DAY,
       grantPeriodMonths: 24,
       isRecurring: true,
       matchRequired: false,
       matchPercentage: undefined,
       status: "Closed",
-      createdAt: 1704067200000,
-      updatedAt: 1709251200000,
+      createdAt: NOW - 120 * DAY,
+      updatedAt: NOW - 30 * DAY,
     });
 
+    // Grant 2: THHS — open grant, deadline 35 days from now
     const grantThhsId = await ctx.db.insert("grants", {
       funderId: thhsId,
-      name: "THHS Affordable Housing Program — 2025 NOFA",
+      name: "THHS Affordable Housing Program — 2026 NOFA",
       description:
         "Capital funding for acquisition, rehabilitation, or new construction of affordable rental housing units serving households at or below 60% AMI in Texas.",
       category: "Capital",
@@ -166,19 +224,20 @@ export const seedDatabase = internalMutation({
       amountMax: 1000000,
       eligibilityRequirements:
         "Nonprofit or CHDO with HUD-certified Community Housing Development Organization status preferred. Must have site control and environmental clearance before application submission.",
-      applicationUrl: "https://www.hhs.texas.gov/nofa-2025",
-      openDate: 1740787200000,
-      deadline: 1746057600000,
-      announcementDate: 1751328000000,
+      applicationUrl: "https://www.hhs.texas.gov/nofa-2026",
+      openDate: NOW - 30 * DAY,
+      deadline: NOW + 35 * DAY,
+      announcementDate: NOW + 90 * DAY,
       grantPeriodMonths: 36,
       isRecurring: true,
       matchRequired: true,
       matchPercentage: 25,
       status: "Open",
-      createdAt: 1738368000000,
-      updatedAt: 1740787200000,
+      createdAt: NOW - 60 * DAY,
+      updatedAt: NOW - 5 * DAY,
     });
 
+    // Grant 3: Dell — upcoming grant, deadline 60 days from now
     const grantDtfId = await ctx.db.insert("grants", {
       funderId: dtfId,
       name: "Dell Foundation Digital Equity Grant",
@@ -190,16 +249,16 @@ export const seedDatabase = internalMutation({
       eligibilityRequirements:
         "Austin-based 501(c)(3) serving low-income populations. Program must include measurable outcomes for digital literacy improvement and device access.",
       applicationUrl: "https://www.delltechnologies.com/foundation/apply",
-      openDate: 1743465600000,
-      deadline: 1751328000000,
+      openDate: NOW + 14 * DAY,
+      deadline: NOW + 60 * DAY,
       announcementDate: undefined,
       grantPeriodMonths: 12,
       isRecurring: false,
       matchRequired: false,
       matchPercentage: undefined,
       status: "Upcoming",
-      createdAt: 1743465600000,
-      updatedAt: 1743465600000,
+      createdAt: NOW - 14 * DAY,
+      updatedAt: NOW - 7 * DAY,
     });
 
     // ─── Applications ─────────────────────────────────────────────────────────
@@ -212,16 +271,16 @@ export const seedDatabase = internalMutation({
         "This project will establish a community health navigator program embedded within our existing workforce development centers, connecting 500 low-income residents annually to preventive care, mental health services, and insurance enrollment support.",
       stage: "Awarded",
       priority: "High",
-      submittedDate: 1709078400000,
-      decisionDate: 1714694400000,
+      submittedDate: NOW - 45 * DAY,
+      decisionDate: NOW - 10 * DAY,
       decisionNotes:
         "Awarded at $175,000 — slightly below requested amount. Funder requested we narrow scope to East Austin zip codes only (78702, 78721, 78722, 78723).",
       reviewedById: bobId,
-      reviewedAt: 1708992000000,
+      reviewedAt: NOW - 50 * DAY,
       internalScore: 9.2,
       tags: "health-equity,community-health,east-austin",
-      createdAt: 1706745600000,
-      updatedAt: 1714694400000,
+      createdAt: NOW - 90 * DAY,
+      updatedAt: NOW - 10 * DAY,
     });
 
     const appSubmittedId = await ctx.db.insert("applications", {
@@ -233,15 +292,15 @@ export const seedDatabase = internalMutation({
         "Rehabilitation of 24 affordable rental units at our Cedar Creek property, addressing deferred maintenance and improving energy efficiency. Project will preserve affordability for households at 30–60% AMI for a minimum 30-year period.",
       stage: "Submitted",
       priority: "Critical",
-      submittedDate: 1743552000000,
+      submittedDate: NOW - 5 * DAY,
       decisionDate: undefined,
       decisionNotes: undefined,
       reviewedById: bobId,
-      reviewedAt: 1743379200000,
+      reviewedAt: NOW - 7 * DAY,
       internalScore: 8.7,
       tags: "affordable-housing,capital,rehabilitation,cedar-creek",
-      createdAt: 1740960000000,
-      updatedAt: 1743552000000,
+      createdAt: NOW - 30 * DAY,
+      updatedAt: NOW - 5 * DAY,
     });
 
     const appDraftId = await ctx.db.insert("applications", {
@@ -260,8 +319,8 @@ export const seedDatabase = internalMutation({
       reviewedAt: undefined,
       internalScore: undefined,
       tags: "digital-equity,workforce,digital-literacy",
-      createdAt: 1743638400000,
-      updatedAt: 1743638400000,
+      createdAt: NOW - 7 * DAY,
+      updatedAt: NOW - 2 * DAY,
     });
 
     // ─── Application Tasks ────────────────────────────────────────────────────
@@ -270,12 +329,12 @@ export const seedDatabase = internalMutation({
       assigneeId: carolId,
       title: "Write program narrative (2,500 words max)",
       category: "Writing",
-      dueDate: 1708300800000,
+      dueDate: NOW - 60 * DAY,
       isCompleted: true,
-      completedAt: 1708214400000,
+      completedAt: NOW - 62 * DAY,
       completedById: carolId,
       sortOrder: 1,
-      createdAt: 1706745600000,
+      createdAt: NOW - 90 * DAY,
     });
 
     await ctx.db.insert("applicationTasks", {
@@ -283,12 +342,12 @@ export const seedDatabase = internalMutation({
       assigneeId: daveId,
       title: "Prepare project budget and budget justification",
       category: "Budget",
-      dueDate: 1708387200000,
+      dueDate: NOW - 55 * DAY,
       isCompleted: true,
-      completedAt: 1708300800000,
+      completedAt: NOW - 57 * DAY,
       completedById: daveId,
       sortOrder: 2,
-      createdAt: 1706745600000,
+      createdAt: NOW - 90 * DAY,
     });
 
     await ctx.db.insert("applicationTasks", {
@@ -296,12 +355,12 @@ export const seedDatabase = internalMutation({
       assigneeId: carolId,
       title: "Gather letters of support from community partners",
       category: "Attachments",
-      dueDate: 1708560000000,
+      dueDate: NOW - 50 * DAY,
       isCompleted: true,
-      completedAt: 1708473600000,
+      completedAt: NOW - 52 * DAY,
       completedById: carolId,
       sortOrder: 3,
-      createdAt: 1706745600000,
+      createdAt: NOW - 90 * DAY,
     });
 
     await ctx.db.insert("applicationTasks", {
@@ -309,12 +368,12 @@ export const seedDatabase = internalMutation({
       assigneeId: bobId,
       title: "Internal review and executive sign-off",
       category: "Review",
-      dueDate: 1708905600000,
+      dueDate: NOW - 48 * DAY,
       isCompleted: true,
-      completedAt: 1708819200000,
+      completedAt: NOW - 49 * DAY,
       completedById: bobId,
       sortOrder: 4,
-      createdAt: 1706745600000,
+      createdAt: NOW - 90 * DAY,
     });
 
     await ctx.db.insert("applicationTasks", {
@@ -322,12 +381,25 @@ export const seedDatabase = internalMutation({
       assigneeId: carolId,
       title: "Write program narrative",
       category: "Writing",
-      dueDate: 1748736000000,
+      dueDate: NOW + 30 * DAY,
       isCompleted: false,
       completedAt: undefined,
       completedById: undefined,
       sortOrder: 1,
-      createdAt: 1743724800000,
+      createdAt: NOW - 7 * DAY,
+    });
+
+    await ctx.db.insert("applicationTasks", {
+      applicationId: appDraftId,
+      assigneeId: daveId,
+      title: "Draft project budget with line-item justification",
+      category: "Budget",
+      dueDate: NOW + 40 * DAY,
+      isCompleted: false,
+      completedAt: undefined,
+      completedById: undefined,
+      sortOrder: 2,
+      createdAt: NOW - 7 * DAY,
     });
 
     // ─── Application Notes ────────────────────────────────────────────────────
@@ -338,7 +410,7 @@ export const seedDatabase = internalMutation({
         "Called Sarah Kellerman at ACF on Feb 8. She confirmed our LOI was well received and encouraged us to submit full proposal. She mentioned the review committee is especially interested in the insurance enrollment component. Key relationship moment — make sure we acknowledge her support in our acknowledgements section.",
       isPinned: true,
       isInternal: true,
-      createdAt: 1707436800000,
+      createdAt: NOW - 75 * DAY,
     });
 
     await ctx.db.insert("applicationNotes", {
@@ -348,7 +420,17 @@ export const seedDatabase = internalMutation({
         "Narrative draft v1 complete and shared with Bob for review. Main open items: need updated participant count data from program team and confirmation of match from Hopewell operating reserves. Will follow up with Finance.",
       isPinned: false,
       isInternal: false,
-      createdAt: 1708128000000,
+      createdAt: NOW - 60 * DAY,
+    });
+
+    await ctx.db.insert("applicationNotes", {
+      applicationId: appSubmittedId,
+      authorId: carolId,
+      content:
+        "Environmental clearance documentation has been received from the consultant. Site control letter from the property management company is on file. All pre-submission attachments are ready.",
+      isPinned: false,
+      isInternal: false,
+      createdAt: NOW - 8 * DAY,
     });
 
     // ─── Award ────────────────────────────────────────────────────────────────
@@ -356,22 +438,22 @@ export const seedDatabase = internalMutation({
       applicationId: appAwardedId,
       grantId: grantAcfId,
       awardedAmount: 175000,
-      startDate: 1717200000000,
-      endDate: 1780358400000,
+      startDate: NOW - 5 * DAY,
+      endDate: NOW + 730 * DAY,
       status: "OnTrack",
       restrictionType: "TemporarilyRestricted",
       deliverables:
         "1. Hire and train 2 FTE Community Health Navigators by month 3\n2. Enroll minimum 250 participants by month 12\n3. Connect 500 participants to preventive care services by month 24\n4. Submit quarterly progress reports and annual financial reports\n5. Conduct participant survey with minimum 80% satisfaction rating",
       complianceNotes:
         "Award restricted to East Austin zip codes: 78702, 78721, 78722, 78723. No indirect costs allowable. All personnel must have background checks on file.",
-      nextReportDueDate: 1751328000000,
+      nextReportDueDate: NOW + 85 * DAY,
       reportingFrequency: "Quarterly",
       totalSpent: 38420,
       remainingBalance: 136580,
       contactAtFunder: "Sarah Kellerman — skellerman@austincf.org — 512-555-0201",
       notes:
         "Funder was very pleased with our LOI follow-up calls. Sarah mentioned ACF may have a capacity building supplement available mid-grant year.",
-      createdAt: 1714780800000,
+      createdAt: NOW - 5 * DAY,
     });
 
     // ─── Expenditures ─────────────────────────────────────────────────────────
@@ -379,59 +461,73 @@ export const seedDatabase = internalMutation({
       awardId: awardId,
       recordedById: daveId,
       description:
-        "Salary — Community Health Navigator (Maria Gonzalez) — June 2024 pro-rated (June 15–30)",
+        "Salary — Community Health Navigator (Maria Gonzalez) — March 2026 pro-rated (March 21–31)",
       amount: 3250,
       category: "Personnel",
-      date: 1719705600000,
+      date: NOW - 5 * DAY,
       vendor: undefined,
       receiptUrl: undefined,
       isApproved: true,
       approvedById: aliceId,
-      createdAt: 1719792000000,
+      createdAt: NOW - 4 * DAY,
     });
 
     await ctx.db.insert("expenditures", {
       awardId: awardId,
       recordedById: daveId,
       description:
-        "Purchase of laptop computers for community health navigator workstations (2 units × $1,350)",
+        "Purchase of laptop computers for community health navigator workstations (2 units x $1,350)",
       amount: 2700,
       category: "Equipment",
-      date: 1720310400000,
+      date: NOW - 3 * DAY,
       vendor: "Dell Technologies — Austin Direct Sales",
       receiptUrl:
-        "https://files.hopewellcommunityservices.org/receipts/dell-invoice-2024-07.pdf",
+        "https://files.hopewellcommunityservices.org/receipts/dell-invoice-2026-03.pdf",
       isApproved: true,
       approvedById: aliceId,
-      createdAt: 1720396800000,
+      createdAt: NOW - 2 * DAY,
+    });
+
+    await ctx.db.insert("expenditures", {
+      awardId: awardId,
+      recordedById: daveId,
+      description:
+        "Office supplies — intake forms, folders, and outreach materials printing",
+      amount: 470,
+      category: "Supplies",
+      date: NOW - 2 * DAY,
+      vendor: "Office Depot — Austin Mueller",
+      receiptUrl: undefined,
+      isApproved: false,
+      createdAt: NOW - 1 * DAY,
     });
 
     // ─── Reports ──────────────────────────────────────────────────────────────
     await ctx.db.insert("reports", {
       awardId: awardId,
       authorId: carolId,
-      title: "Q1 Progress Report — ACF Health Equity Initiative (June–September 2024)",
+      title: "Q1 Progress Report — ACF Health Equity Initiative (March–June 2026)",
       type: "Progress",
-      periodStart: 1717200000000,
-      periodEnd: 1727740800000,
+      periodStart: NOW - 5 * DAY,
+      periodEnd: NOW + 85 * DAY,
       content:
-        "PROGRAM PROGRESS\n\nHopewell Community Services is pleased to submit this first quarterly progress report for the ACF Health Equity Initiative grant (Award #HEI-2024-0847).\n\nKey Accomplishments:\n• Hired and onboarded 2 FTE Community Health Navigators (Maria Gonzalez and Carlos Rivera) by July 1, 2024\n• Established partnerships with 4 federally qualified health centers in East Austin\n• Enrolled 87 participants in the first quarter — on pace to meet 250-participant Year 1 goal\n• Connected 52 participants to primary care services and 31 to insurance enrollment support\n\nChallenges:\n• Recruitment for bilingual Spanish/English outreach coordinator position took longer than anticipated. Position filled September 15.\n\nFINANCIAL SUMMARY\nTotal awarded: $175,000\nExpended to date: $38,420 (22% of award)\nRemaining balance: $136,580\n\nAll expenditures are in compliance with award restrictions and ACF allowable cost guidelines.",
-      status: "Submitted",
-      dueDate: 1730419200000,
-      submittedDate: 1729814400000,
-      createdAt: 1728518400000,
+        "PROGRAM PROGRESS\n\nHopewell Community Services is pleased to submit this first quarterly progress report for the ACF Health Equity Initiative grant (Award #HEI-2026-0847).\n\nKey Accomplishments:\n- Hired and onboarded 2 FTE Community Health Navigators (Maria Gonzalez and Carlos Rivera)\n- Established partnerships with 4 federally qualified health centers in East Austin\n- Initial outreach began in target zip codes 78702, 78721, 78722, 78723\n\nFINANCIAL SUMMARY\nTotal awarded: $175,000\nExpended to date: $38,420 (22% of award)\nRemaining balance: $136,580\n\nAll expenditures are in compliance with award restrictions and ACF allowable cost guidelines.",
+      status: "Draft",
+      dueDate: NOW + 85 * DAY,
+      submittedDate: undefined,
+      createdAt: NOW - 2 * DAY,
     });
 
     // ─── Notifications ────────────────────────────────────────────────────────
     await ctx.db.insert("notifications", {
       userId: carolId,
       type: "DeadlineApproaching",
-      title: "THHS Application Due in 7 Days",
+      title: "THHS Application Due in 35 Days",
       message:
-        "Your application 'Hopewell Affordable Housing Renovation — Cedar Creek Units' is due on April 30, 2025. Current stage: Submitted. Confirm all required attachments are uploaded to the funder portal.",
+        "Your application 'Hopewell Affordable Housing Renovation — Cedar Creek Units' is due on " + new Date(NOW + 35 * DAY).toLocaleDateString() + ". Current stage: Submitted. Confirm all required attachments are uploaded to the funder portal.",
       link: "/applications/" + appSubmittedId,
       isRead: false,
-      createdAt: 1745452800000,
+      createdAt: NOW - 1 * DAY,
     });
 
     await ctx.db.insert("notifications", {
@@ -439,10 +535,21 @@ export const seedDatabase = internalMutation({
       type: "TaskAssigned",
       title: "New Task Assigned: Digital Literacy Application Narrative",
       message:
-        "Bob Martinez assigned you a new task: 'Write program narrative' on the Digital Literacy for Working Families Program application. Due date: June 1, 2025.",
+        "Bob Martinez assigned you a new task: 'Write program narrative' on the Digital Literacy for Working Families Program application. Due date: " + new Date(NOW + 30 * DAY).toLocaleDateString() + ".",
       link: "/applications/" + appDraftId,
       isRead: false,
-      createdAt: 1743724800000,
+      createdAt: NOW - 7 * DAY,
+    });
+
+    await ctx.db.insert("notifications", {
+      userId: bobId,
+      type: "ReportDue",
+      title: "Q1 Report Due in 85 Days",
+      message:
+        "The Q1 Progress Report for the ACF Health Equity Initiative is due on " + new Date(NOW + 85 * DAY).toLocaleDateString() + ". Current status: Draft. Please review and submit.",
+      link: "/awards/" + awardId + "/reports",
+      isRead: false,
+      createdAt: NOW - 1 * DAY,
     });
 
     // ─── Audit Logs ───────────────────────────────────────────────────────────
@@ -457,7 +564,7 @@ export const seedDatabase = internalMutation({
         note: "ACF confirmed award via email. Award letter received and filed.",
       }),
       ipAddress: "73.114.22.101",
-      createdAt: 1714694400000,
+      createdAt: NOW - 10 * DAY,
     });
 
     await ctx.db.insert("auditLogs", {
@@ -467,29 +574,49 @@ export const seedDatabase = internalMutation({
       entityId: expPersonnelId,
       details: JSON.stringify({
         expenditureDescription:
-          "Salary — Community Health Navigator (Maria Gonzalez) — June 2024 pro-rated",
+          "Salary — Community Health Navigator (Maria Gonzalez) — March 2026 pro-rated",
         amount: 3250,
         approvedBy: "Alice Admin",
       }),
       ipAddress: "73.114.22.101",
-      createdAt: 1719878400000,
+      createdAt: NOW - 3 * DAY,
+    });
+
+    await ctx.db.insert("auditLogs", {
+      userId: carolId,
+      action: "Create",
+      entityType: "Application",
+      entityId: appDraftId,
+      details: "Created application: Digital Literacy for Working Families Program",
+      ipAddress: "73.114.22.105",
+      createdAt: NOW - 7 * DAY,
+    });
+
+    await ctx.db.insert("auditLogs", {
+      userId: bobId,
+      action: "Submission",
+      entityType: "Application",
+      entityId: appSubmittedId,
+      details: "Application submitted to THHS via funder portal",
+      ipAddress: "73.114.22.102",
+      createdAt: NOW - 5 * DAY,
     });
 
     return {
-      message: "Database seeded successfully",
+      message: "Database seeded successfully (cleared and re-seeded)",
       counts: {
         users: 4,
         organizations: 1,
         funders: 3,
         grants: 3,
         applications: 3,
-        applicationTasks: 5,
-        applicationNotes: 2,
+        applicationTasks: 6,
+        applicationNotes: 3,
         awards: 1,
-        expenditures: 2,
+        expenditures: 3,
         reports: 1,
-        notifications: 2,
-        auditLogs: 2,
+        notifications: 3,
+        auditLogs: 4,
       },
     };
   },

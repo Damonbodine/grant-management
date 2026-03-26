@@ -1,8 +1,9 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const STAGES = ["Draft", "InReview", "Submitted", "UnderFunderReview", "Awarded", "Declined"] as const;
 
@@ -16,7 +17,7 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 export function PipelineBreakdown() {
-  const applications = useQuery(api.applications.listApplications, {});
+  const applications = useAuthedQuery(api.applications.listApplications, {});
 
   if (applications === undefined) {
     return <Card><CardContent className="pt-6"><Skeleton className="h-40 w-full" /></CardContent></Card>;

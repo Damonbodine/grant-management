@@ -1,14 +1,14 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Trophy, TrendingUp, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function DashboardStatCards() {
-  const stats = useQuery(api.dashboard.getDashboardStats);
+  const stats = useAuthedQuery(api.dashboard.getDashboardStats);
 
-  if (stats === undefined) {
+  if (stats === undefined || stats === null) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -68,3 +68,4 @@ export function DashboardStatCards() {
 }
 
 import { cn } from "@/lib/utils";
+import { useAuthedQuery } from "@/hooks/use-authed-query";

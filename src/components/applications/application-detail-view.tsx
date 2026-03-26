@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const STAGE_COLORS: Record<string, string> = {
   Draft: "bg-slate-100 text-slate-700",
@@ -20,8 +21,8 @@ const STAGE_COLORS: Record<string, string> = {
 
 export function ApplicationDetailView({ applicationId }: { applicationId: string }) {
   const router = useRouter();
-  const application = useQuery(api.applications.getApplication, { id: applicationId as any });
-  const grant = useQuery(api.grants.getGrant, application?.grantId ? { id: application.grantId } : "skip");
+  const application = useAuthedQuery(api.applications.getApplication, { id: applicationId as Id<"applications"> });
+  const grant = useAuthedQuery(api.grants.getGrant, application?.grantId ? { id: application.grantId } : "skip");
 
   if (application === undefined) return <Skeleton className="h-64 w-full" />;
   if (application === null) return <p className="text-muted-foreground">Application not found.</p>;

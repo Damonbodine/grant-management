@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 interface ApplicationTaskFormProps {
   applicationId: string;
@@ -15,7 +16,7 @@ interface ApplicationTaskFormProps {
 
 export function ApplicationTaskForm({ applicationId, onSuccess }: ApplicationTaskFormProps) {
   const createTask = useMutation(api.applicationTasks.createApplicationTask);
-  const users = useQuery(api.users.listUsers, {});
+  const users = useAuthedQuery(api.users.listUsers, {});
 
   const [title, setTitle] = useState("");
   const [assigneeId, setAssigneeId] = useState("");
@@ -33,12 +34,12 @@ export function ApplicationTaskForm({ applicationId, onSuccess }: ApplicationTas
     setLoading(true);
     setError(null);
     try {
-      await (createTask as any)({
-        applicationId: applicationId,
+      await createTask({
+        applicationId: applicationId as Id<"applications">,
         title: title.trim(),
         category: "Other",
         sortOrder: 0,
-        assigneeId: assigneeId || undefined,
+        assigneeId: assigneeId ? (assigneeId as Id<"users">) : undefined,
         dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
       });
       setTitle("");

@@ -66,8 +66,8 @@ export const createAuditLog = mutation({
     ipAddress: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    // Only Admin or GrantManager can create audit logs directly
+    await requireRole(ctx, ["Admin", "GrantManager"]);
     return await ctx.db.insert("auditLogs", {
       ...args,
       createdAt: Date.now(),
@@ -79,13 +79,13 @@ export const getRecentActivity = query({
   args: { limit: v.optional(v.float64()) },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return [];
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
       .first();
     if (!user || (user.role !== "Admin" && user.role !== "GrantManager")) {
-      throw new Error("FORBIDDEN");
+      return [];
     }
     const limit = args.limit ? Math.min(Math.floor(args.limit), 100) : 20;
     const logs = await ctx.db.query("auditLogs").order("desc").take(limit);

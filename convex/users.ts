@@ -9,7 +9,7 @@ export const listUsers = query({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return [];
     if (args.role !== undefined) {
       let q = ctx.db.query("users").withIndex("by_role", (q) => q.eq("role", args.role!));
       const results = await q.collect();
@@ -137,6 +137,9 @@ export const getOrCreateUser = mutation({
     avatarUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Auth guard: require authenticated identity
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("UNAUTHORIZED");
     const existing = await ctx.db
       .query("users")
       .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))

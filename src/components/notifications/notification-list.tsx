@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUser } from "@clerk/nextjs";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCheck } from "lucide-react";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const TYPE_ICONS: Record<string, string> = {
   DeadlineApproaching: "⏰",
@@ -23,11 +23,9 @@ const TYPE_ICONS: Record<string, string> = {
 
 export function NotificationList() {
   const [statusFilter, setStatusFilter] = useState("all");
-  const { user: clerkUser } = useUser();
-  const users = useQuery(api.users.listUsers, {});
-  const currentUser = users?.find((u: typeof users[number]) => u.clerkId === clerkUser?.id);
+  const currentUser = useAuthedQuery(api.users.getCurrentUser);
 
-  const notifications = useQuery(
+  const notifications = useAuthedQuery(
     api.notifications.listNotifications,
     currentUser ? { userId: currentUser._id, isRead: statusFilter === "unread" ? false : statusFilter === "read" ? true : undefined } : "skip"
   );

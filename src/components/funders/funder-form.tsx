@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function FunderForm({ funderId, onSuccess }: { funderId?: Id<"funders">; onSuccess: () => void }) {
-  const funder = useQuery(api.funders.getFunder, funderId ? { id: funderId } : "skip");
+  const funder = useAuthedQuery(api.funders.getFunder, funderId ? { id: funderId } : "skip");
   const createFunder = useMutation(api.funders.createFunder);
   const updateFunder = useMutation(api.funders.updateFunder);
 
@@ -35,9 +36,9 @@ export function FunderForm({ funderId, onSuccess }: { funderId?: Id<"funders">; 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (funderId) {
-      await updateFunder({ id: funderId, ...form, type: form.type as any, relationshipStatus: form.relationshipStatus as any });
+      await updateFunder({ id: funderId, ...form, type: form.type as "Foundation" | "Government" | "Corporate" | "Individual" | "Other", relationshipStatus: form.relationshipStatus as "New" | "Active" | "Cultivating" | "Dormant" | "Declined" });
     } else {
-      await createFunder({ ...form, type: form.type as any, relationshipStatus: form.relationshipStatus as any });
+      await createFunder({ ...form, type: form.type as "Foundation" | "Government" | "Corporate" | "Individual" | "Other", relationshipStatus: form.relationshipStatus as "New" | "Active" | "Cultivating" | "Dormant" | "Declined" });
     }
     onSuccess();
   };

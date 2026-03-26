@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const STATUS_COLORS: Record<string, string> = {
   Researching: "bg-slate-100 text-slate-700",
@@ -26,9 +27,9 @@ interface GrantListTableProps {
 
 export function GrantListTable({ statusFilter, categoryFilter, searchFilter }: GrantListTableProps) {
   const router = useRouter();
-  const grants = useQuery(api.grants.listGrants, {
-    status: statusFilter && statusFilter !== "all" ? (statusFilter as any) : undefined,
-    category: categoryFilter && categoryFilter !== "all" ? (categoryFilter as any) : undefined,
+  const grants = useAuthedQuery(api.grants.listGrants, {
+    status: statusFilter && statusFilter !== "all" ? (statusFilter as "Researching" | "Upcoming" | "Open" | "Closed" | "Archived") : undefined,
+    category: categoryFilter && categoryFilter !== "all" ? (categoryFilter as "General Operating" | "Program" | "Capital" | "Capacity Building" | "Research" | "Emergency" | "Other") : undefined,
   });
   const deleteGrant = useMutation(api.grants.deleteGrant);
 

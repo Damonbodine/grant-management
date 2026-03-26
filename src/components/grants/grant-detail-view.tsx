@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const STATUS_COLORS: Record<string, string> = {
   Researching: "bg-slate-100 text-slate-700",
@@ -20,8 +21,8 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function GrantDetailView({ grantId }: { grantId: string }) {
   const router = useRouter();
-  const grant = useQuery(api.grants.getGrant, { id: grantId as any });
-  const funder = useQuery(api.funders.getFunder, grant?.funderId ? { id: grant.funderId } : "skip");
+  const grant = useAuthedQuery(api.grants.getGrant, { id: grantId as Id<"grants"> });
+  const funder = useAuthedQuery(api.funders.getFunder, grant?.funderId ? { id: grant.funderId } : "skip");
 
   if (grant === undefined) return <Skeleton className="h-64 w-full" />;
   if (grant === null) return <p className="text-muted-foreground">Grant not found.</p>;

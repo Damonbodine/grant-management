@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const STAGE_COLORS: Record<string, string> = {
   Draft: "bg-slate-100 text-slate-700",
@@ -27,9 +28,9 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 export function ApplicationListTable({ stageFilter, priorityFilter, searchFilter }: { stageFilter?: string; priorityFilter?: string; searchFilter?: string }) {
   const router = useRouter();
-  const applications = useQuery(api.applications.listApplications, {
-    stage: stageFilter && stageFilter !== "all" ? (stageFilter as any) : undefined,
-    priority: priorityFilter && priorityFilter !== "all" ? (priorityFilter as any) : undefined,
+  const applications = useAuthedQuery(api.applications.listApplications, {
+    stage: stageFilter && stageFilter !== "all" ? (stageFilter as "Draft" | "InReview" | "Submitted" | "UnderFunderReview" | "Awarded" | "Declined" | "Withdrawn") : undefined,
+    priority: priorityFilter && priorityFilter !== "all" ? (priorityFilter as "Low" | "Medium" | "High" | "Critical") : undefined,
   });
 
   if (applications === undefined) return <Skeleton className="h-48 w-full" />;

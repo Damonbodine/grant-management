@@ -5,7 +5,7 @@ export const getDashboardStats = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return null;
 
     const [applications, awards, grants, funders] = await Promise.all([
       ctx.db.query("applications").collect(),
@@ -67,7 +67,7 @@ export const getUpcomingDeadlines = query({
   args: { daysAhead: v.optional(v.float64()) },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return [];
 
     const days = args.daysAhead ?? 30;
     const now = Date.now();

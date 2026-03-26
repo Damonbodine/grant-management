@@ -9,7 +9,7 @@ export const listFunders = query({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return [];
     if (args.type !== undefined) {
       const byType = await ctx.db
         .query("funders")
@@ -55,7 +55,7 @@ export const createFunder = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const caller = await requireRole(ctx, ["Admin", "GrantManager"]);
+    const caller = await requireRole(ctx, ["Admin", "GrantManager", "GrantWriter"]);
     const now = Date.now();
     const id = await ctx.db.insert("funders", {
       ...args,
@@ -84,7 +84,7 @@ export const updateFunder = mutation({
     relationshipStatus: v.optional(v.union(v.literal("New"), v.literal("Active"), v.literal("Cultivating"), v.literal("Dormant"), v.literal("Declined"))),
   },
   handler: async (ctx, args) => {
-    const caller = await requireRole(ctx, ["Admin", "GrantManager"]);
+    const caller = await requireRole(ctx, ["Admin", "GrantManager", "GrantWriter"]);
     const existing = await ctx.db.get(args.id);
     if (!existing) throw new Error("NOT_FOUND");
     const { id, ...fields } = args;
@@ -102,6 +102,14 @@ export const deleteFunder = mutation({
     const caller = await requireRole(ctx, ["Admin"]);
     const existing = await ctx.db.get(args.id);
     if (!existing) throw new Error("NOT_FOUND");
+    // Check for related grants — prevent delete if any exist
+    const relatedGrants = await ctx.db
+      .query("grants")
+      .withIndex("by_funderId", (q) => q.eq("funderId", args.id))
+      .collect();
+    if (relatedGrants.length > 0) {
+      throw new Error("CANNOT_DELETE: Funder has related grants. Delete or reassign them first.");
+    }
     await ctx.db.delete(args.id);
     await writeAuditLog(ctx, caller._id, "Delete", "funders", args.id, `Deleted funder ${existing.name}`);
   },

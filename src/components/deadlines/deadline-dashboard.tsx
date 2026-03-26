@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function DeadlineDashboard() {
   const [typeFilter, setTypeFilter] = useState("all");
@@ -21,7 +22,7 @@ export function DeadlineDashboard() {
     All: 365,
   };
 
-  const deadlines = useQuery(api.dashboard.getUpcomingDeadlines, { daysAhead: daysMap[timeframeFilter] ?? 30 });
+  const deadlines = useAuthedQuery(api.dashboard.getUpcomingDeadlines, { daysAhead: daysMap[timeframeFilter] ?? 30 });
 
   if (deadlines === undefined) return <Skeleton className="h-64 w-full" />;
 

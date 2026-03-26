@@ -1,14 +1,15 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, TrendingDown, Wallet, BarChart2 } from "lucide-react";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function AwardBudgetCards({ awardId }: { awardId: string }) {
-  const award = useQuery(api.awards.getAward, { id: awardId as any });
+  const award = useAuthedQuery(api.awards.getAward, { id: awardId as Id<"awards"> });
 
   if (award === undefined) {
     return (

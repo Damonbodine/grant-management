@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +8,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function ExpenditureListTable({ awardId, categoryFilter }: { awardId: string; categoryFilter?: string }) {
-  const expenditures = useQuery(api.expenditures.listExpenditures, {
-    awardId: awardId as any,
-    category: categoryFilter && categoryFilter !== "all" ? (categoryFilter as any) : undefined,
+  const expenditures = useAuthedQuery(api.expenditures.listExpenditures, {
+    awardId: awardId as Id<"awards">,
+    category: categoryFilter && categoryFilter !== "all" ? (categoryFilter as "Personnel" | "Supplies" | "Travel" | "Equipment" | "Contractual" | "Indirect" | "Other") : undefined,
   });
   const deleteExpenditure = useMutation(api.expenditures.deleteExpenditure);
 

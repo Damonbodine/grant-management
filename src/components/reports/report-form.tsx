@@ -1,5 +1,5 @@
 "use client";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@clerk/nextjs";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function ReportForm({ awardId, onSuccess }: { awardId: string; onSuccess: () => void }) {
   const createReport = useMutation(api.reports.createReport);
-  const users = useQuery(api.users.listUsers, {});
+  const users = useAuthedQuery(api.users.listUsers, {});
   const { user: clerkUser } = useUser();
 
   const [form, setForm] = useState({
@@ -27,10 +28,10 @@ export function ReportForm({ awardId, onSuccess }: { awardId: string; onSuccess:
     const currentUser = users?.find((u: typeof users[number]) => u.clerkId === clerkUser?.id);
     if (!currentUser) return;
     await createReport({
-      awardId: awardId as any,
+      awardId: awardId as Id<"awards">,
       authorId: currentUser._id,
       title: form.title,
-      type: form.type as any,
+      type: form.type as "Progress" | "Financial" | "Final" | "Interim",
       dueDate: new Date(form.dueDate).getTime(),
       periodStart: new Date(form.periodStart).getTime(),
       periodEnd: new Date(form.periodEnd).getTime(),

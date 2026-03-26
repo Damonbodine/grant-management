@@ -2,6 +2,7 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getCurrentUser, requireRole } from "./helpers";
 
+
 export const listNotifications = query({
   args: {
     userId: v.id("users"),
@@ -9,7 +10,7 @@ export const listNotifications = query({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return [];
     if (args.isRead !== undefined) {
       return await ctx.db
         .query("notifications")
@@ -45,9 +46,8 @@ export const createNotification = mutation({
     link: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Admin-only or internal use; require at least authenticated
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    // Only Admin or GrantManager can create notifications
+    const caller = await requireRole(ctx, ["Admin", "GrantManager"]);
     const id = await ctx.db.insert("notifications", {
       ...args,
       isRead: false,
@@ -125,7 +125,7 @@ export const getUnreadNotificationCount = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return 0;
     const unread = await ctx.db
       .query("notifications")
       .withIndex("by_userId_isRead", (q) => q.eq("userId", args.userId).eq("isRead", false))

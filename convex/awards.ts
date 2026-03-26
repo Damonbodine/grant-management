@@ -8,14 +8,29 @@ export const listAwards = query({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return [];
+    let awards;
     if (args.status !== undefined) {
-      return await ctx.db
+      awards = await ctx.db
         .query("awards")
         .withIndex("by_status", (q) => q.eq("status", args.status!))
         .collect();
+    } else {
+      awards = await ctx.db.query("awards").order("desc").collect();
     }
-    return await ctx.db.query("awards").order("desc").collect();
+    // Enrich with grant name and application title
+    const enriched = await Promise.all(
+      awards.map(async (award) => {
+        const grant = await ctx.db.get(award.grantId);
+        const application = await ctx.db.get(award.applicationId);
+        return {
+          ...award,
+          grantName: grant?.name ?? "Unknown Grant",
+          applicationTitle: application?.title ?? "Unknown Application",
+        };
+      })
+    );
+    return enriched;
   },
 });
 

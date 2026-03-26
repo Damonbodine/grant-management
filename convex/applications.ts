@@ -10,7 +10,7 @@ const ALLOWED_TRANSITIONS: Record<Stage, Stage[]> = {
   InReview: ["Submitted", "Draft", "Withdrawn"],
   Submitted: ["UnderFunderReview", "Withdrawn"],
   UnderFunderReview: ["Awarded", "Declined", "Withdrawn"],
-  Awarded: ["Closed" as any],
+  Awarded: [],
   Declined: [],
   Withdrawn: [],
 };
@@ -22,7 +22,7 @@ export const listApplications = query({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("UNAUTHORIZED");
+    if (!identity) return [];
     if (args.stage !== undefined) {
       const byStage = await ctx.db
         .query("applications")
@@ -120,8 +120,24 @@ export const deleteApplication = mutation({
     const existing = await ctx.db.get(args.id);
     if (!existing) throw new Error("NOT_FOUND");
     if (existing.stage !== "Draft") throw new Error("FORBIDDEN: Can only delete Draft applications");
+    // Cascade delete related tasks
+    const tasks = await ctx.db
+      .query("applicationTasks")
+      .withIndex("by_applicationId", (q) => q.eq("applicationId", args.id))
+      .collect();
+    for (const task of tasks) {
+      await ctx.db.delete(task._id);
+    }
+    // Cascade delete related notes
+    const notes = await ctx.db
+      .query("applicationNotes")
+      .withIndex("by_applicationId", (q) => q.eq("applicationId", args.id))
+      .collect();
+    for (const note of notes) {
+      await ctx.db.delete(note._id);
+    }
     await ctx.db.delete(args.id);
-    await writeAuditLog(ctx, caller._id, "Delete", "applications", args.id, `Deleted application: ${existing.title}`);
+    await writeAuditLog(ctx, caller._id, "Delete", "applications", args.id, `Deleted application: ${existing.title} (cascaded ${tasks.length} tasks, ${notes.length} notes)`);
   },
 });
 

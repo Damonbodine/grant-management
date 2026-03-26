@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 interface ApplicationEditFormProps {
   id: string;
@@ -19,9 +20,9 @@ interface ApplicationEditFormProps {
 export function ApplicationEditForm({ id }: ApplicationEditFormProps) {
   const router = useRouter();
   const updateApplication = useMutation(api.applications.updateApplication);
-  const application = useQuery(api.applications.getApplication, { id: id as Id<"applications"> });
-  const grants = useQuery(api.grants.listGrants, {});
-  const users = useQuery(api.users.listUsers, {});
+  const application = useAuthedQuery(api.applications.getApplication, { id: id as Id<"applications"> });
+  const grants = useAuthedQuery(api.grants.listGrants, {});
+  const users = useAuthedQuery(api.users.listUsers, {});
 
   const [title, setTitle] = useState("");
   const [grantId, setGrantId] = useState("");
@@ -37,13 +38,13 @@ export function ApplicationEditForm({ id }: ApplicationEditFormProps) {
   useEffect(() => {
     if (application) {
       setTitle(application.title ?? "");
-      setGrantId((application as any).grantId ?? "");
-      setAssignedWriterId((application as any).assignedWriterId ?? "");
+      setGrantId(application.grantId ?? "");
+      setAssignedWriterId(application.leadWriterId ?? "");
       setRequestedAmount(application.requestedAmount?.toString() ?? "");
       setStage((application.stage as typeof stage) ?? "Draft");
       setPriority((application.priority as typeof priority) ?? "Medium");
-      setDeadline((application as any).deadline ? new Date((application as any).deadline).toISOString().split("T")[0] : "");
-      setNotes((application as any).notes ?? "");
+      setDeadline("");
+      setNotes(application.projectSummary ?? "");
     }
   }, [application]);
 
@@ -101,7 +102,7 @@ export function ApplicationEditForm({ id }: ApplicationEditFormProps) {
               <SelectTrigger id="grantId"><SelectValue placeholder="Select grant" /></SelectTrigger>
               <SelectContent>
                 {grants?.map((g: typeof grants[number]) => (
-                  <SelectItem key={g._id} value={g._id}>{(g as any).name ?? g._id}</SelectItem>
+                  <SelectItem key={g._id} value={g._id}>{g.name ?? g._id}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

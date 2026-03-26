@@ -1,5 +1,7 @@
-import { query, mutation, MutationCtx, QueryCtx } from "./_generated/server";
-import { v } from "convex/values";
+import { MutationCtx, QueryCtx } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+
+type UserRole = "Admin" | "GrantManager" | "GrantWriter" | "FinanceUser";
 
 export async function getCurrentUser(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
@@ -14,10 +16,10 @@ export async function getCurrentUser(ctx: QueryCtx | MutationCtx) {
 
 export async function requireRole(
   ctx: QueryCtx | MutationCtx,
-  allowedRoles: Array<"Admin" | "GrantManager" | "GrantWriter" | "FinanceUser">
+  allowedRoles: UserRole[]
 ) {
   const user = await getCurrentUser(ctx);
-  if (!allowedRoles.includes(user.role as any)) {
+  if (!allowedRoles.includes(user.role)) {
     throw new Error("FORBIDDEN");
   }
   return user;
@@ -25,14 +27,14 @@ export async function requireRole(
 
 export async function writeAuditLog(
   ctx: MutationCtx,
-  userId: string,
+  userId: Id<"users">,
   action: "Create" | "Update" | "Delete" | "StageChange" | "Approval" | "Submission",
   entityType: string,
   entityId: string,
   details?: string
 ) {
   await ctx.db.insert("auditLogs", {
-    userId: userId as any,
+    userId,
     action,
     entityType,
     entityId,

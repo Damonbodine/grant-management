@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const TYPE_COLORS: Record<string, string> = {
   Foundation: "bg-indigo-100 text-indigo-700",
@@ -24,8 +25,8 @@ interface FunderListTableProps {
 
 export function FunderListTable({ typeFilter, searchFilter }: FunderListTableProps) {
   const router = useRouter();
-  const funders = useQuery(api.funders.listFunders, {
-    type: typeFilter && typeFilter !== "all" ? (typeFilter as any) : undefined,
+  const funders = useAuthedQuery(api.funders.listFunders, {
+    type: typeFilter && typeFilter !== "all" ? (typeFilter as "Foundation" | "Government" | "Corporate" | "Individual" | "Other") : undefined,
   });
   const deleteFunder = useMutation(api.funders.deleteFunder);
 

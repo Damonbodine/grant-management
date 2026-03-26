@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 interface FunderEditFormProps {
   id: string;
@@ -19,10 +20,10 @@ interface FunderEditFormProps {
 export function FunderEditForm({ id }: FunderEditFormProps) {
   const router = useRouter();
   const updateFunder = useMutation(api.funders.updateFunder);
-  const funder = useQuery(api.funders.getFunder, { id: id as Id<"funders"> });
+  const funder = useAuthedQuery(api.funders.getFunder, { id: id as Id<"funders"> });
 
   const [name, setName] = useState("");
-  const [type, setType] = useState<"Foundation" | "Government" | "Corporate" | "Individual">("Foundation");
+  const [type, setType] = useState<"Foundation" | "Government" | "Corporate" | "Individual" | "Other">("Foundation");
   const [website, setWebsite] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -34,7 +35,7 @@ export function FunderEditForm({ id }: FunderEditFormProps) {
   useEffect(() => {
     if (funder) {
       setName(funder.name ?? "");
-      setType((funder.type as "Foundation" | "Government" | "Corporate" | "Individual") ?? "Foundation");
+      setType((funder.type as "Foundation" | "Government" | "Corporate" | "Individual" | "Other") ?? "Foundation");
       setWebsite(funder.website ?? "");
       setContactName(funder.contactName ?? "");
       setContactEmail(funder.contactEmail ?? "");
@@ -97,7 +98,7 @@ export function FunderEditForm({ id }: FunderEditFormProps) {
           </div>
           <div className="space-y-1">
             <Label htmlFor="type">Type <span className="text-destructive">*</span></Label>
-            <Select value={type} onValueChange={(v) => setType((v ?? "Foundation") as "Foundation" | "Government" | "Corporate" | "Individual")}>
+            <Select value={type} onValueChange={(v) => setType((v ?? "Foundation") as "Foundation" | "Government" | "Corporate" | "Individual" | "Other")}>
               <SelectTrigger id="type">
                 <SelectValue />
               </SelectTrigger>
@@ -106,6 +107,7 @@ export function FunderEditForm({ id }: FunderEditFormProps) {
                 <SelectItem value="Government">Government</SelectItem>
                 <SelectItem value="Corporate">Corporate</SelectItem>
                 <SelectItem value="Individual">Individual</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

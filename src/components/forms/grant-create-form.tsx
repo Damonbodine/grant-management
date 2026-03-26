@@ -1,51 +1,68 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
+import { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function GrantCreateForm() {
   const router = useRouter();
   const createGrant = useMutation(api.grants.createGrant);
-  const funders = useQuery(api.funders.listFunders, {});
+  const funders = useAuthedQuery(api.funders.listFunders, {});
 
-  const [title, setTitle] = useState("");
+  const [name, setName] = useState("");
   const [funderId, setFunderId] = useState("");
-  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState<string>("General Operating");
+  const [amountMin, setAmountMin] = useState("");
+  const [amountMax, setAmountMax] = useState("");
+  const [eligibilityRequirements, setEligibilityRequirements] = useState("");
+  const [applicationUrl, setApplicationUrl] = useState("");
+  const [openDate, setOpenDate] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [status, setStatus] = useState<"Open" | "Closed" | "Archived">("Open");
-  const [focusAreas, setFocusAreas] = useState("");
-  const [eligibilityCriteria, setEligibilityCriteria] = useState("");
-  const [notes, setNotes] = useState("");
+  const [announcementDate, setAnnouncementDate] = useState("");
+  const [grantPeriodMonths, setGrantPeriodMonths] = useState("");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [matchRequired, setMatchRequired] = useState(false);
+  const [matchPercentage, setMatchPercentage] = useState("");
+  const [status, setStatus] = useState<string>("Open");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !funderId || !amount || !deadline) {
-      setError("Please fill in all required fields.");
+    if (!name.trim() || !funderId || !deadline) {
+      setError("Please fill in all required fields (Name, Funder, Deadline).");
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const focusAreasArray = focusAreas
-        ? focusAreas.split(",").map((s) => s.trim()).filter(Boolean)
-        : [];
       await createGrant({
-        name: title.trim(),
-        funderId: funderId as any,
+        name: name.trim(),
+        funderId: funderId as Id<"funders">,
+        description: description.trim() || undefined,
+        category: category as "General Operating" | "Program" | "Capital" | "Capacity Building" | "Research" | "Emergency" | "Other",
+        amountMin: amountMin ? parseFloat(amountMin) : undefined,
+        amountMax: amountMax ? parseFloat(amountMax) : undefined,
+        eligibilityRequirements: eligibilityRequirements.trim() || undefined,
+        applicationUrl: applicationUrl.trim() || undefined,
+        openDate: openDate ? new Date(openDate).getTime() : undefined,
         deadline: new Date(deadline).getTime(),
-        status,
-        category: "General Operating",
-        isRecurring: false,
-        eligibilityRequirements: eligibilityCriteria.trim() || undefined,
+        announcementDate: announcementDate ? new Date(announcementDate).getTime() : undefined,
+        grantPeriodMonths: grantPeriodMonths ? parseFloat(grantPeriodMonths) : undefined,
+        isRecurring,
+        matchRequired: matchRequired || undefined,
+        matchPercentage: matchPercentage ? parseFloat(matchPercentage) : undefined,
+        status: status as "Researching" | "Upcoming" | "Open" | "Closed" | "Archived",
       });
       router.push("/grants");
     } catch (err: any) {
@@ -63,8 +80,8 @@ export function GrantCreateForm() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
-            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Grant title" required />
+            <Label htmlFor="name">Grant Name <span className="text-destructive">*</span></Label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Grant program name" required />
           </div>
           <div className="space-y-1">
             <Label htmlFor="funderId">Funder <span className="text-destructive">*</span></Label>
@@ -73,46 +90,99 @@ export function GrantCreateForm() {
                 <SelectValue placeholder="Select funder" />
               </SelectTrigger>
               <SelectContent>
-                {funders?.map((f: typeof funders[number]) => (
+                {funders?.map((f) => (
                   <SelectItem key={f._id} value={f._id}>{f.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-1">
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Grant description and purpose" />
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label htmlFor="amount">Amount ($) <span className="text-destructive">*</span></Label>
-              <Input id="amount" type="number" min={0} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required />
+              <Label htmlFor="category">Category <span className="text-destructive">*</span></Label>
+              <Select value={category} onValueChange={(v) => setCategory(v ?? "General Operating")}>
+                <SelectTrigger id="category"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="General Operating">General Operating</SelectItem>
+                  <SelectItem value="Program">Program</SelectItem>
+                  <SelectItem value="Capital">Capital</SelectItem>
+                  <SelectItem value="Capacity Building">Capacity Building</SelectItem>
+                  <SelectItem value="Research">Research</SelectItem>
+                  <SelectItem value="Emergency">Emergency</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="status">Status <span className="text-destructive">*</span></Label>
+              <Select value={status} onValueChange={(v) => setStatus(v ?? "Open")}>
+                <SelectTrigger id="status"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Researching">Researching</SelectItem>
+                  <SelectItem value="Upcoming">Upcoming</SelectItem>
+                  <SelectItem value="Open">Open</SelectItem>
+                  <SelectItem value="Closed">Closed</SelectItem>
+                  <SelectItem value="Archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="amountMin">Minimum Amount ($)</Label>
+              <Input id="amountMin" type="number" min={0} step="0.01" value={amountMin} onChange={(e) => setAmountMin(e.target.value)} placeholder="0.00" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="amountMax">Maximum Amount ($)</Label>
+              <Input id="amountMax" type="number" min={0} step="0.01" value={amountMax} onChange={(e) => setAmountMax(e.target.value)} placeholder="0.00" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="openDate">Open Date</Label>
+              <Input id="openDate" type="date" value={openDate} onChange={(e) => setOpenDate(e.target.value)} />
             </div>
             <div className="space-y-1">
               <Label htmlFor="deadline">Deadline <span className="text-destructive">*</span></Label>
               <Input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} required />
             </div>
+            <div className="space-y-1">
+              <Label htmlFor="announcementDate">Announcement Date</Label>
+              <Input id="announcementDate" type="date" value={announcementDate} onChange={(e) => setAnnouncementDate(e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="grantPeriodMonths">Grant Period (months)</Label>
+              <Input id="grantPeriodMonths" type="number" min={1} value={grantPeriodMonths} onChange={(e) => setGrantPeriodMonths(e.target.value)} placeholder="12" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="applicationUrl">Application URL</Label>
+              <Input id="applicationUrl" type="url" value={applicationUrl} onChange={(e) => setApplicationUrl(e.target.value)} placeholder="https://funder.org/apply" />
+            </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="status">Status <span className="text-destructive">*</span></Label>
-            <Select value={status} onValueChange={(v) => setStatus((v ?? "Open") as "Open" | "Closed" | "Archived")}>
-              <SelectTrigger id="status">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Open">Open</SelectItem>
-                <SelectItem value="Closed">Closed</SelectItem>
-                <SelectItem value="Archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="eligibilityRequirements">Eligibility Requirements</Label>
+            <Textarea id="eligibilityRequirements" value={eligibilityRequirements} onChange={(e) => setEligibilityRequirements(e.target.value)} rows={3} placeholder="Who is eligible to apply..." />
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="focusAreas">Focus Areas</Label>
-            <Input id="focusAreas" value={focusAreas} onChange={(e) => setFocusAreas(e.target.value)} placeholder="e.g. Education, Health (comma-separated)" />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="eligibilityCriteria">Eligibility Criteria</Label>
-            <Textarea id="eligibilityCriteria" value={eligibilityCriteria} onChange={(e) => setEligibilityCriteria(e.target.value)} rows={3} placeholder="Who is eligible to apply..." />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Internal notes..." />
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <Switch id="isRecurring" checked={isRecurring} onCheckedChange={setIsRecurring} />
+              <Label htmlFor="isRecurring">Recurring Grant</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="matchRequired" checked={matchRequired} onCheckedChange={setMatchRequired} />
+              <Label htmlFor="matchRequired">Match Required</Label>
+            </div>
+            {matchRequired && (
+              <div className="space-y-1">
+                <Label htmlFor="matchPercentage">Match %</Label>
+                <Input id="matchPercentage" type="number" min={0} max={100} value={matchPercentage} onChange={(e) => setMatchPercentage(e.target.value)} placeholder="25" className="w-24" />
+              </div>
+            )}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-3 pt-2">

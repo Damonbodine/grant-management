@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import {
@@ -11,6 +10,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -25,10 +25,10 @@ const navItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useUser();
-  const convexUser = useQuery(api.users.listUsers, {});
-  const unreadCount = useQuery(
+  const currentUser = useAuthedQuery(api.users.getCurrentUser);
+  const unreadCount = useAuthedQuery(
     api.notifications.getUnreadNotificationCount,
-    convexUser && convexUser.length > 0 ? { userId: convexUser[0]._id } : "skip"
+    currentUser ? { userId: currentUser._id } : "skip"
   );
 
   return (

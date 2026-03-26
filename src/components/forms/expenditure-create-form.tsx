@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 interface ExpenditureCreateFormProps {
   awardId: string;
@@ -18,9 +19,10 @@ interface ExpenditureCreateFormProps {
 export function ExpenditureCreateForm({ awardId }: ExpenditureCreateFormProps) {
   const router = useRouter();
   const createExpenditure = useMutation(api.expenditures.createExpenditure);
+  const currentUser = useAuthedQuery(api.users.getCurrentUser);
 
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<"Personnel" | "Supplies" | "Travel" | "Indirect" | "Other">("Personnel");
+  const [category, setCategory] = useState<"Personnel" | "Supplies" | "Travel" | "Equipment" | "Contractual" | "Indirect" | "Other">("Personnel");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
   const [vendor, setVendor] = useState("");
@@ -38,8 +40,14 @@ export function ExpenditureCreateForm({ awardId }: ExpenditureCreateFormProps) {
     setLoading(true);
     setError(null);
     try {
-      await (createExpenditure as any)({
-        awardId: awardId,
+      if (!currentUser) {
+        setError("User not loaded. Please try again.");
+        setLoading(false);
+        return;
+      }
+      await createExpenditure({
+        awardId: awardId as Id<"awards">,
+        recordedById: currentUser._id,
         description: description.trim(),
         category,
         amount: parseFloat(amount),
@@ -74,6 +82,8 @@ export function ExpenditureCreateForm({ awardId }: ExpenditureCreateFormProps) {
                 <SelectItem value="Personnel">Personnel</SelectItem>
                 <SelectItem value="Supplies">Supplies</SelectItem>
                 <SelectItem value="Travel">Travel</SelectItem>
+                <SelectItem value="Equipment">Equipment</SelectItem>
+                <SelectItem value="Contractual">Contractual</SelectItem>
                 <SelectItem value="Indirect">Indirect</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
               </SelectContent>

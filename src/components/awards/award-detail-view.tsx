@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AwardBudgetCards } from "@/components/awards/award-budget-cards";
 import { format } from "date-fns";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700",
@@ -18,8 +19,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function AwardDetailView({ awardId }: { awardId: string }) {
-  const award = useQuery(api.awards.getAward, { id: awardId as any });
-  const grant = useQuery(api.grants.getGrant, award?.grantId ? { id: award.grantId } : "skip");
+  const award = useAuthedQuery(api.awards.getAward, { id: awardId as Id<"awards"> });
+  const grant = useAuthedQuery(api.grants.getGrant, award?.grantId ? { id: award.grantId } : "skip");
 
   if (award === undefined) return <Skeleton className="h-64 w-full" />;
   if (award === null) return <p className="text-muted-foreground">Award not found.</p>;

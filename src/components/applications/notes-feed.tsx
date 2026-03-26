@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +12,11 @@ import { Pin, Trash2, Send } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { Id } from "@convex/_generated/dataModel";
 import { formatDistanceToNow } from "date-fns";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function NotesFeed({ applicationId }: { applicationId: string }) {
-  const notes = useQuery(api.applicationNotes.getNotesByApplication, { applicationId: applicationId as any });
-  const users = useQuery(api.users.listUsers, {});
+  const notes = useAuthedQuery(api.applicationNotes.getNotesByApplication, { applicationId: applicationId as Id<"applications"> });
+  const users = useAuthedQuery(api.users.listUsers, {});
   const createNote = useMutation(api.applicationNotes.createApplicationNote);
   const deleteNote = useMutation(api.applicationNotes.deleteApplicationNote);
   const updateNote = useMutation(api.applicationNotes.updateApplicationNote);
@@ -29,7 +30,7 @@ export function NotesFeed({ applicationId }: { applicationId: string }) {
 
   const handleSubmit = async () => {
     if (!content.trim() || !currentUser) return;
-    await createNote({ applicationId: applicationId as any, authorId: currentUser._id, content, isPinned: false, isInternal });
+    await createNote({ applicationId: applicationId as Id<"applications">, authorId: currentUser._id, content, isPinned: false, isInternal });
     setContent("");
   };
 

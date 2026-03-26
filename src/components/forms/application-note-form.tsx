@@ -6,6 +6,7 @@ import { Id } from "@convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 interface ApplicationNoteFormProps {
   applicationId: string;
@@ -14,6 +15,7 @@ interface ApplicationNoteFormProps {
 
 export function ApplicationNoteForm({ applicationId, onSuccess }: ApplicationNoteFormProps) {
   const createNote = useMutation(api.applicationNotes.createApplicationNote);
+  const currentUser = useAuthedQuery(api.users.getCurrentUser);
 
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,11 +27,16 @@ export function ApplicationNoteForm({ applicationId, onSuccess }: ApplicationNot
       setError("Note content is required.");
       return;
     }
+    if (!currentUser) {
+      setError("Not authenticated.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      await (createNote as any)({
-        applicationId: applicationId,
+      await createNote({
+        applicationId: applicationId as Id<"applications">,
+        authorId: currentUser._id,
         content: content.trim(),
         isPinned: false,
         isInternal: false,

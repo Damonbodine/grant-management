@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Eye } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const STATUS_COLORS: Record<string, string> = {
   Active: "bg-emerald-100 text-emerald-700",
@@ -20,8 +21,8 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function AwardListTable({ statusFilter }: { statusFilter?: string }) {
   const router = useRouter();
-  const awards = useQuery(api.awards.listAwards, {
-    status: statusFilter && statusFilter !== "all" ? (statusFilter as any) : undefined,
+  const awards = useAuthedQuery(api.awards.listAwards, {
+    status: statusFilter && statusFilter !== "all" ? (statusFilter as "Active" | "OnTrack" | "AtRisk" | "Completed" | "Closed") : undefined,
   });
 
   if (awards === undefined) return <Skeleton className="h-48 w-full" />;
@@ -49,7 +50,7 @@ export function AwardListTable({ statusFilter }: { statusFilter?: string }) {
               : null;
             return (
               <TableRow key={award._id} className="hover:bg-muted/40">
-                <TableCell className="font-medium">{award.awardedAmount ? `Award #${award._id.slice(-6)}` : "—"}</TableCell>
+                <TableCell className="font-medium">{(award as any).grantName ?? `Award #${award._id.slice(-6)}`}</TableCell>
                 <TableCell><span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${STATUS_COLORS[award.status]}`}>{award.status}</span></TableCell>
                 <TableCell className="text-sm">${award.awardedAmount.toLocaleString()}</TableCell>
                 <TableCell className="text-sm">${award.remainingBalance.toLocaleString()}</TableCell>

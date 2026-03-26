@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { format, isPast } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const STATUS_COLORS: Record<string, string> = {
   Draft: "bg-slate-100 text-slate-700",
@@ -20,7 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function ReportListTable({ awardId }: { awardId: string }) {
   const router = useRouter();
-  const reports = useQuery(api.reports.getReportsByAward, { awardId: awardId as any });
+  const reports = useAuthedQuery(api.reports.getReportsByAward, { awardId: awardId as Id<"awards"> });
   const deleteReport = useMutation(api.reports.deleteReport);
 
   if (reports === undefined) return <Skeleton className="h-48 w-full" />;

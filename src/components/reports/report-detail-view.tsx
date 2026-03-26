@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 const NEXT_STATUS: Record<string, string> = {
   Draft: "InReview",
@@ -21,7 +22,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export function ReportDetailView({ reportId, awardId }: { reportId: string; awardId?: string }) {
-  const report = useQuery(api.reports.getReport, { id: reportId as any });
+  const report = useAuthedQuery(api.reports.getReport, { id: reportId as Id<"reports"> });
   const advanceStage = useMutation(api.reports.advanceReportStage);
 
   if (report === undefined) return <Skeleton className="h-64 w-full" />;
@@ -40,7 +41,7 @@ export function ReportDetailView({ reportId, awardId }: { reportId: string; awar
           </div>
         </div>
         {nextStatus && (
-          <Button size="sm" onClick={() => advanceStage({ id: reportId as any, targetStatus: nextStatus as any })}>
+          <Button size="sm" onClick={() => advanceStage({ id: reportId as Id<"reports">, targetStatus: nextStatus as "Draft" | "InReview" | "Submitted" | "Accepted" })}>
             {STATUS_LABELS[nextStatus]}
           </Button>
         )}

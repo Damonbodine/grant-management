@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "convex/react";
+
 import { api } from "@convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +10,12 @@ import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Id } from "@convex/_generated/dataModel";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function FunderDetailView({ funderId }: { funderId: string }) {
   const router = useRouter();
-  const funder = useQuery(api.funders.getFunder, { id: funderId as any });
-  const grants = useQuery(api.grants.getGrantsByFunder, { funderId: funderId as any });
+  const funder = useAuthedQuery(api.funders.getFunder, { id: funderId as Id<"funders"> });
+  const grants = useAuthedQuery(api.grants.getGrantsByFunder, { funderId: funderId as Id<"funders"> });
 
   if (funder === undefined) return <Skeleton className="h-64 w-full" />;
   if (funder === null) return <p className="text-muted-foreground">Funder not found.</p>;

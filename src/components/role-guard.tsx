@@ -1,10 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useQuery } from "convex/react";
+
 import { api } from "../../convex/_generated/api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldAlert } from "lucide-react";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 interface RoleGuardProps {
   allowedRoles: string[];
@@ -12,7 +13,7 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
-  const currentUser = useQuery(api.users.getCurrentUser);
+  const currentUser = useAuthedQuery(api.users.getCurrentUser);
 
   // Still loading
   if (currentUser === undefined) {

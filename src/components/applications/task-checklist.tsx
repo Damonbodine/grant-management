@@ -1,5 +1,5 @@
 "use client";
-import { useQuery, useMutation } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,13 +12,14 @@ import { Trash2, Plus } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { Id } from "@convex/_generated/dataModel";
 import { format } from "date-fns";
+import { useAuthedQuery } from "@/hooks/use-authed-query";
 
 export function TaskChecklist({ applicationId }: { applicationId: string }) {
-  const tasks = useQuery(api.applicationTasks.listApplicationTasks, { applicationId: applicationId as any });
+  const tasks = useAuthedQuery(api.applicationTasks.listApplicationTasks, { applicationId: applicationId as Id<"applications"> });
   const toggleTask = useMutation(api.applicationTasks.toggleTaskComplete);
   const createTask = useMutation(api.applicationTasks.createApplicationTask);
   const deleteTask = useMutation(api.applicationTasks.deleteApplicationTask);
-  const users = useQuery(api.users.listUsers, {});
+  const users = useAuthedQuery(api.users.listUsers, {});
   const { user: clerkUser } = useUser();
   const [newTitle, setNewTitle] = useState("");
 
@@ -36,7 +37,7 @@ export function TaskChecklist({ applicationId }: { applicationId: string }) {
 
   const handleAdd = async () => {
     if (!newTitle.trim()) return;
-    await createTask({ applicationId: applicationId as any, title: newTitle, category: "Other", sortOrder: tasks.length });
+    await createTask({ applicationId: applicationId as Id<"applications">, title: newTitle, category: "Other", sortOrder: tasks.length });
     setNewTitle("");
   };
 
