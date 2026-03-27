@@ -1,176 +1,113 @@
+/* Factory512 Unified Design System — GrantFlow (Teal)
+ *
+ * All Factory512 apps share this base. Per-app accent color is the only override.
+ * Uses oklch for perceptual uniformity. Tailwind v4 syntax.
+ */
+
 @import "tailwindcss";
+@import "tw-animate-css";
 
-@theme {
-  /* ── Core backgrounds ── */
-  --color-background: hsl(0 0% 98%);
-  --color-foreground: hsl(215 28% 17%);
+@custom-variant dark (&:is(.dark *));
 
-  /* ── Card / Popover ── */
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(215 28% 17%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(215 28% 17%);
+@theme inline {
+  /* ─── Base Palette ──────────────────────────────────── */
+  --color-background: oklch(0.145 0.014 260);
+  --color-foreground: oklch(0.93 0.006 260);
 
-  /* ── Primary — Deep Teal #0D9488 ── */
-  --color-primary: hsl(174 86% 31%);
-  --color-primary-foreground: hsl(0 0% 100%);
+  /* ─── Cards & Surfaces ─────────────────────────────── */
+  --color-card: oklch(0.178 0.014 260);
+  --color-card-foreground: oklch(0.93 0.006 260);
+  --color-popover: oklch(0.178 0.014 260);
+  --color-popover-foreground: oklch(0.93 0.006 260);
 
-  /* ── Secondary — Warm Amber #F59E0B (deadlines/alerts) ── */
-  --color-secondary: hsl(38 92% 50%);
-  --color-secondary-foreground: hsl(0 0% 100%);
+  /* ─── Primary — Teal ────────────────────────────────── */
+  --color-primary: oklch(0.60 0.16 175);
+  --color-primary-foreground: oklch(0.98 0.005 260);
 
-  /* ── Muted ── */
-  --color-muted: hsl(214 32% 91%);
-  --color-muted-foreground: hsl(215 16% 47%);
+  /* ─── Secondary ────────────────────────────────────── */
+  --color-secondary: oklch(0.22 0.014 260);
+  --color-secondary-foreground: oklch(0.88 0.006 260);
 
-  /* ── Accent — Indigo #6366F1 (pipeline stages) ── */
-  --color-accent: hsl(239 84% 67%);
-  --color-accent-foreground: hsl(0 0% 100%);
+  /* ─── Muted ────────────────────────────────────────── */
+  --color-muted: oklch(0.21 0.012 260);
+  --color-muted-foreground: oklch(0.60 0.01 260);
 
-  /* ── Destructive ── */
-  --color-destructive: hsl(0 84% 60%);
-  --color-destructive-foreground: hsl(0 0% 100%);
+  /* ─── Accent ───────────────────────────────────────── */
+  --color-accent: oklch(0.22 0.014 260);
+  --color-accent-foreground: oklch(0.93 0.006 260);
 
-  /* ── Border / Input / Ring ── */
-  --color-border: hsl(214 32% 91%);
-  --color-input: hsl(214 32% 91%);
-  --color-ring: hsl(174 86% 31%);
+  /* ─── Destructive ──────────────────────────────────── */
+  --color-destructive: oklch(0.55 0.2 25);
+  --color-destructive-foreground: oklch(0.98 0.005 25);
 
-  /* ── Border radius ── */
-  --radius: 0.5rem;
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  /* ─── Borders & Inputs ─────────────────────────────── */
+  --color-border: oklch(0.26 0.012 260);
+  --color-input: oklch(0.26 0.012 260);
+  --color-ring: oklch(0.60 0.16 175);
 
-  /* ── Chart palette ── */
-  --color-chart-1: hsl(174 86% 31%);
-  --color-chart-2: hsl(38 92% 50%);
-  --color-chart-3: hsl(239 84% 67%);
-  --color-chart-4: hsl(160 84% 39%);
-  --color-chart-5: hsl(0 84% 60%);
+  /* ─── Sidebar ──────────────────────────────────────── */
+  --color-sidebar: oklch(0.16 0.014 260);
+  --color-sidebar-foreground: oklch(0.88 0.006 260);
+  --color-sidebar-primary: oklch(0.60 0.16 175);
+  --color-sidebar-primary-foreground: oklch(0.98 0.005 260);
+  --color-sidebar-accent: oklch(0.22 0.018 260);
+  --color-sidebar-accent-foreground: oklch(0.93 0.006 260);
+  --color-sidebar-border: oklch(0.24 0.012 260);
+  --color-sidebar-ring: oklch(0.60 0.16 175);
 
-  /* ── Sidebar ── */
-  --color-sidebar: hsl(222 47% 11%);
-  --color-sidebar-foreground: hsl(215 16% 47%);
-  --color-sidebar-primary: hsl(174 86% 31%);
-  --color-sidebar-primary-foreground: hsl(0 0% 100%);
-  --color-sidebar-accent: hsl(215 28% 17%);
-  --color-sidebar-accent-foreground: hsl(213 27% 84%);
-  --color-sidebar-border: hsl(215 28% 17%);
-  --color-sidebar-ring: hsl(174 86% 31%);
+  /* ─── Chart Colors ─────────────────────────────────── */
+  --color-chart-1: oklch(0.65 0.18 250);
+  --color-chart-2: oklch(0.70 0.16 160);
+  --color-chart-3: oklch(0.72 0.15 85);
+  --color-chart-4: oklch(0.60 0.20 25);
+  --color-chart-5: oklch(0.65 0.18 310);
 
-  /* ── Typography ── */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  /* ─── Semantic Status Colors ───────────────────────── */
+  --color-success: oklch(0.65 0.17 150);
+  --color-success-foreground: oklch(0.98 0.005 150);
+  --color-warning: oklch(0.75 0.15 85);
+  --color-warning-foreground: oklch(0.20 0.02 85);
+  --color-info: oklch(0.65 0.15 240);
+  --color-info-foreground: oklch(0.98 0.005 240);
 
-  /* ── Animations ── */
-  --animate-accordion-down: accordion-down 0.2s ease-out;
-  --animate-accordion-up: accordion-up 0.2s ease-out;
-  --animate-fade-in: fade-in 0.15s ease-out;
-  --animate-slide-in-from-left: slide-in-from-left 0.2s ease-out;
-  --animate-slide-out-to-left: slide-out-to-left 0.2s ease-out;
+  /* ─── Radius ───────────────────────────────────────── */
+  --radius: 0.625rem;
 
-  @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
-  }
-  @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
-  }
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes slide-in-from-left {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
-  }
-  @keyframes slide-out-to-left {
-    from { transform: translateX(0); }
-    to { transform: translateX(-100%); }
-  }
+  /* ─── Fonts ────────────────────────────────────────── */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-/* ── Dark mode overrides ── */
-.dark {
-  --color-background: hsl(222 47% 11%);
-  --color-foreground: hsl(213 27% 84%);
-  --color-card: hsl(215 28% 17%);
-  --color-card-foreground: hsl(213 27% 84%);
-  --color-popover: hsl(215 28% 17%);
-  --color-popover-foreground: hsl(213 27% 84%);
-  --color-primary: hsl(174 86% 31%);
-  --color-primary-foreground: hsl(0 0% 100%);
-  --color-secondary: hsl(38 92% 50%);
-  --color-secondary-foreground: hsl(222 47% 11%);
-  --color-muted: hsl(215 28% 17%);
-  --color-muted-foreground: hsl(215 16% 47%);
-  --color-accent: hsl(239 84% 67%);
-  --color-accent-foreground: hsl(0 0% 100%);
-  --color-destructive: hsl(0 72% 51%);
-  --color-destructive-foreground: hsl(0 0% 100%);
-  --color-border: hsl(215 28% 17%);
-  --color-input: hsl(215 28% 17%);
-  --color-ring: hsl(174 86% 31%);
-  --color-chart-1: hsl(174 86% 40%);
-  --color-chart-2: hsl(38 92% 55%);
-  --color-chart-3: hsl(239 84% 72%);
-  --color-chart-4: hsl(160 84% 45%);
-  --color-chart-5: hsl(0 84% 65%);
-  --color-sidebar: hsl(222 47% 8%);
-  --color-sidebar-foreground: hsl(215 16% 47%);
-  --color-sidebar-primary: hsl(174 86% 31%);
-  --color-sidebar-primary-foreground: hsl(0 0% 100%);
-  --color-sidebar-accent: hsl(215 28% 14%);
-  --color-sidebar-accent-foreground: hsl(213 27% 84%);
-  --color-sidebar-border: hsl(215 28% 14%);
-  --color-sidebar-ring: hsl(174 86% 31%);
-}
+/* ─── Base Styles ──────────────────────────────────────── */
 
 @layer base {
   * {
-    border-color: var(--color-border);
+    @apply border-border;
   }
-
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-
-  /* ── Typography scale ── */
-  h1 {
-    @apply text-3xl font-bold tracking-tight;
-  }
-  h2 {
-    @apply text-2xl font-semibold tracking-tight;
-  }
-  h3 {
-    @apply text-xl font-semibold;
-  }
-  h4 {
-    @apply text-base font-semibold;
-  }
-
-  /* ── Scrollbar styling ── */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background-color: var(--color-border);
-    border-radius: 9999px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: var(--color-muted-foreground);
+    @apply bg-background text-foreground antialiased;
   }
 }
 
+/* ─── Status Badge Utilities ───────────────────────────── */
+
 @layer components {
+  .badge-success {
+    @apply bg-success/15 text-success border-success/25;
+  }
+  .badge-warning {
+    @apply bg-warning/15 text-warning border-warning/25;
+  }
+  .badge-destructive {
+    @apply bg-destructive/15 text-destructive border-destructive/25;
+  }
+  .badge-info {
+    @apply bg-info/15 text-info border-info/25;
+  }
+  .badge-muted {
+    @apply bg-muted text-muted-foreground border-border;
+  }
+
   /* ── Grant pipeline stage badge variants ── */
   .badge-draft {
     @apply bg-slate-100 text-slate-600 text-xs font-semibold uppercase tracking-wide px-2.5 py-0.5 rounded-full;
@@ -192,23 +129,13 @@
   }
 
   /* ── Deadline urgency left-border bar variants ── */
-  .urgency-bar-critical { background-color: hsl(0 84% 60%); }
-  .urgency-bar-high     { background-color: var(--color-secondary); }
-  .urgency-bar-medium   { background-color: var(--color-accent); }
-  .urgency-bar-low      { background-color: var(--color-primary); }
+  .urgency-bar-critical { background-color: oklch(0.55 0.2 25); }
+  .urgency-bar-high     { background-color: oklch(0.75 0.15 85); }
+  .urgency-bar-medium   { background-color: oklch(0.65 0.15 240); }
+  .urgency-bar-low      { background-color: oklch(0.60 0.16 175); }
 
   /* ── KPI stat card top-accent border variants ── */
-  .stat-card-primary   { border-top: 2px solid var(--color-primary); }
-  .stat-card-secondary { border-top: 2px solid var(--color-secondary); }
-  .stat-card-accent    { border-top: 2px solid var(--color-accent); }
-}
-
-/* Elegant SaaS Refinements */
-.card, [data-sidebar="sidebar"] {
-  border: none !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
-  background-color: hsl(0 0% 100%) !important;
-}
-table th, table td {
-  border-bottom: 1px solid hsl(var(--border)) !important;
+  .stat-card-primary   { border-top: 2px solid oklch(0.60 0.16 175); }
+  .stat-card-secondary { border-top: 2px solid oklch(0.75 0.15 85); }
+  .stat-card-accent    { border-top: 2px solid oklch(0.65 0.15 240); }
 }

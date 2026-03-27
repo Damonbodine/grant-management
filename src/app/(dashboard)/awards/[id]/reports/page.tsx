@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { ReportListTable } from "@/components/reports/report-list-table";

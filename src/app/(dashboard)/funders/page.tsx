@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { FunderFilterBar } from "@/components/funders/funder-filter-bar";

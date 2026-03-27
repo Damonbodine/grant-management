@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { PageHeader } from "@/components/page-header";
 import { ExpenditureCreateForm } from "@/components/forms/expenditure-create-form";
 

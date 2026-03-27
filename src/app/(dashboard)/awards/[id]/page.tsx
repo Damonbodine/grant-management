@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { PageHeader } from "@/components/page-header";
 import { AwardDetailView } from "@/components/awards/award-detail-view";
 import { AwardBudgetCards } from "@/components/awards/award-budget-cards";

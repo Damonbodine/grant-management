@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { PageHeader } from "@/components/page-header";
 import { ReportCreateForm } from "@/components/forms/report-create-form";
 

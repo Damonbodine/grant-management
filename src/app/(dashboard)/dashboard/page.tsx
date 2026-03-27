@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { PageHeader } from "@/components/page-header";
 import { DashboardStatCards } from "@/components/dashboard/dashboard-stat-cards";
 import { PipelineBreakdown } from "@/components/dashboard/pipeline-breakdown";

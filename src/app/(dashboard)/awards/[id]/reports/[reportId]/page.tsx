@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { PageHeader } from "@/components/page-header";
 import { ReportDetailView } from "@/components/reports/report-detail-view";
 
