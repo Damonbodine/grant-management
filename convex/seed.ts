@@ -61,9 +61,9 @@ export const seedDatabase = internalMutation({
 
     // ─── Users ────────────────────────────────────────────────────────────────
     const aliceId = await ctx.db.insert("users", {
-      clerkId: "clerk_admin_001",
-      name: "Alice Admin",
-      email: "alice.admin@hopewellcommunityservices.org",
+      clerkId: "user_3BV4YzajQ96nGS3hlBDld9VcLa8",
+      name: "Demo User",
+      email: "demo@factory512.dev",
       phone: "512-555-0101",
       avatarUrl: undefined,
       role: "Admin",

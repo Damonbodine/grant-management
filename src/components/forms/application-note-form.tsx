@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthedQuery } from "@/hooks/use-authed-query";
+import { AiGenerateButton } from "@/components/ai-generate-button";
 
 interface ApplicationNoteFormProps {
   applicationId: string;
@@ -53,7 +54,15 @@ export function ApplicationNoteForm({ applicationId, onSuccess }: ApplicationNot
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="space-y-1">
-        <Label htmlFor="note-content">Add Note</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="note-content">Add Note</Label>
+          <AiGenerateButton
+            fieldName="applicationNotes"
+            context={{ applicationId }}
+            onGenerated={(text) => setContent(text)}
+            disabled={loading}
+          />
+        </div>
         <Textarea
           id="note-content"
           value={content}

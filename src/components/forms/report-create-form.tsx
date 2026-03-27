@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthedQuery } from "@/hooks/use-authed-query";
+import { AiGenerateButton } from "@/components/ai-generate-button";
 
 interface ReportCreateFormProps {
   awardId: string;
@@ -99,7 +100,15 @@ export function ReportCreateForm({ awardId }: ReportCreateFormProps) {
             </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="content">Narrative Content <span className="text-destructive">*</span></Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="content">Narrative Content <span className="text-destructive">*</span></Label>
+              <AiGenerateButton
+                fieldName="reportContent"
+                context={{ title, type, awardId, periodStart, periodEnd }}
+                onGenerated={(text) => setContent(text)}
+                disabled={loading}
+              />
+            </div>
             <Textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} rows={6} placeholder="Report narrative and findings..." />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

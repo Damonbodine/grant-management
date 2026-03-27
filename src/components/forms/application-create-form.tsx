@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthedQuery } from "@/hooks/use-authed-query";
+import { AiGenerateButton } from "@/components/ai-generate-button";
 
 export function ApplicationCreateForm() {
   const router = useRouter();
@@ -112,7 +113,15 @@ export function ApplicationCreateForm() {
             </div>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="projectSummary">Project Summary</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="projectSummary">Project Summary</Label>
+              <AiGenerateButton
+                fieldName="projectSummary"
+                context={{ title, grantName: grants?.find((g) => g._id === grantId)?.name ?? "", requestedAmount, priority }}
+                onGenerated={(text) => setProjectSummary(text)}
+                disabled={loading}
+              />
+            </div>
             <Textarea id="projectSummary" value={projectSummary} onChange={(e) => setProjectSummary(e.target.value)} rows={4} placeholder="Brief summary of proposed project..." />
           </div>
           <div className="space-y-1">
