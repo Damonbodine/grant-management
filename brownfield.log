@@ -1,0 +1,12 @@
+Run complete. All 27 steps completed, 0 failed.
+
+**Summary of changes:**
+
+| File | Action |
+|------|--------|
+| `convex/ai.ts` | Modified — added 4 new AI actions (`analyzeGrantFit`, `generateProposalNarrative`, `generateBudgetJustification`, `generateReportDraft`) + shared `callOpenRouter` helper |
+| `src/components/grants/grant-fit-analyzer.tsx` | Created — RFP textarea, fit score display, alignment/gaps |
+| `src/components/applications/proposal-narrative-generator.tsx` | Created — generates 4 narrative sections |
+| `src/components/expenditures/budget-justification-writer.tsx` | Created — generates per-category justifications |
+| `src/components/reports/grant-report-draft.tsx` | Created — generates 5-section report draft |
+| 4 page files | Modified — wired components into existing pages |
