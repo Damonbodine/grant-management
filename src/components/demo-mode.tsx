@@ -14,6 +14,7 @@ type DemoStep = {
   whyItMatters: string;
   routePrefix: string;
   target?: string;
+  actionTarget?: string;
   actionLabel?: string;
 };
 
@@ -93,6 +94,7 @@ const GRANTFLOW_SCENARIO: DemoScenario = {
         "This shows the app can hold the information needed to evaluate real opportunities, not just titles and dates.",
       routePrefix: "/grants/",
       target: "[data-demo='grant-detail-view']",
+      actionTarget: "[data-demo='primary-grant-link']",
     },
   ],
 };
@@ -185,6 +187,14 @@ export function DemoMode() {
 
   function nextStep() {
     if (!onExpectedRoute) {
+      const actionElement = activeStep.actionTarget
+        ? document.querySelector<HTMLElement>(activeStep.actionTarget)
+        : null;
+      if (actionElement) {
+        actionElement.click();
+        return;
+      }
+
       const params = new URLSearchParams(searchParams.toString());
       params.set("demo", activeScenario.id);
       params.set("step", String(stepIndex + 1));
@@ -194,9 +204,12 @@ export function DemoMode() {
       return;
     }
 
-    if (!isLastStep) {
-      setStepIndex((prev) => prev + 1);
+    if (isLastStep) {
+      exitDemo();
+      return;
     }
+
+    setStepIndex((prev) => prev + 1);
   }
 
   function previousStep() {

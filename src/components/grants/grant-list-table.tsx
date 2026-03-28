@@ -60,7 +60,7 @@ export function GrantListTable({ statusFilter, categoryFilter, searchFilter }: G
           {filtered.length === 0 && (
             <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No grants found.</TableCell></TableRow>
           )}
-          {filtered.map((grant: typeof filtered[number]) => (
+          {filtered.map((grant: typeof filtered[number], index: number) => (
             <TableRow key={grant._id} className="hover:bg-muted/40">
               <TableCell className="font-medium">{grant.name}</TableCell>
               <TableCell className="text-sm text-muted-foreground">{grant.category}</TableCell>
@@ -80,6 +80,7 @@ export function GrantListTable({ statusFilter, categoryFilter, searchFilter }: G
                   <Button
                     size="icon"
                     variant="ghost"
+                    data-demo={index === 0 ? "primary-grant-link" : undefined}
                     onClick={() =>
                       router.push(
                         withPreservedDemoQuery(`/grants/${grant._id}`, searchParams),
