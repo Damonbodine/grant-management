@@ -32,7 +32,7 @@ export function PipelineBreakdown() {
   const max = Math.max(...stageCounts.map((s) => s.count), 1);
 
   return (
-    <Card>
+    <Card data-demo="pipeline-breakdown">
       <CardHeader>
         <CardTitle className="text-base font-semibold">Pipeline Breakdown</CardTitle>
       </CardHeader>

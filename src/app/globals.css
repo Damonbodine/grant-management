@@ -92,6 +92,15 @@
 /* ─── Status Badge Utilities ───────────────────────────── */
 
 @layer components {
+  [data-demo-active="true"] {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent),
+      0 0 0 4px color-mix(in oklch, var(--color-primary) 18%, transparent),
+      0 18px 48px color-mix(in oklch, var(--color-primary) 12%, transparent);
+    border-radius: calc(var(--radius) + 0.25rem);
+    transition: box-shadow 160ms ease;
+  }
+
   .badge-success {
     @apply bg-success/15 text-success border-success/25;
   }

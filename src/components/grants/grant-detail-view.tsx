@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pencil } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Id } from "@convex/_generated/dataModel";
 import { useAuthedQuery } from "@/hooks/use-authed-query";
+import { withPreservedDemoQuery } from "@/lib/demo";
 
 const STATUS_COLORS: Record<string, string> = {
   Researching: "bg-slate-100 text-slate-700",
@@ -21,6 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function GrantDetailView({ grantId }: { grantId: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const grant = useAuthedQuery(api.grants.getGrant, { id: grantId as Id<"grants"> });
   const funder = useAuthedQuery(api.funders.getFunder, grant?.funderId ? { id: grant.funderId } : "skip");
 
@@ -28,7 +30,7 @@ export function GrantDetailView({ grantId }: { grantId: string }) {
   if (grant === null) return <p className="text-muted-foreground">Grant not found.</p>;
 
   return (
-    <Card>
+    <Card data-demo="grant-detail-view">
       <CardHeader className="flex flex-row items-start justify-between">
         <div>
           <CardTitle className="text-xl">{grant.name}</CardTitle>
@@ -38,7 +40,13 @@ export function GrantDetailView({ grantId }: { grantId: string }) {
           <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${STATUS_COLORS[grant.status]}`}>
             {grant.status}
           </span>
-          <Button size="sm" variant="outline" onClick={() => router.push(`/grants/${grantId}/edit`)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              router.push(withPreservedDemoQuery(`/grants/${grantId}/edit`, searchParams))
+            }
+          >
             <Pencil className="h-4 w-4 mr-1" /> Edit
           </Button>
         </div>

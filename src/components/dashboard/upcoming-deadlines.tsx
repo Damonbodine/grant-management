@@ -16,7 +16,7 @@ export function UpcomingDeadlines() {
   }
 
   return (
-    <Card>
+    <Card data-demo="upcoming-deadlines">
       <CardHeader>
         <CardTitle className="text-base font-semibold">Upcoming Deadlines</CardTitle>
       </CardHeader>

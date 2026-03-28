@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { api } from "@convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
@@ -11,6 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAuthedQuery } from "@/hooks/use-authed-query";
+import { withPreservedDemoQuery } from "@/lib/demo";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,6 +25,7 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useUser();
   const currentUser = useAuthedQuery(api.users.getCurrentUser);
   const unreadCount = useAuthedQuery(
@@ -42,7 +44,7 @@ export function AppSidebar() {
           return (
             <Link
               key={href}
-              href={href}
+              href={withPreservedDemoQuery(href, searchParams)}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                 isActive

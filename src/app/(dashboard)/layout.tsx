@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Separator } from "@/components/ui/separator";
+import { DemoMode } from "@/components/demo-mode";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <main className="flex flex-1 flex-col gap-4 p-4">
           {children}
         </main>
+        <DemoMode />
       </SidebarInset>
     </SidebarProvider>
   );

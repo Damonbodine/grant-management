@@ -50,7 +50,10 @@ export function DashboardStatCards() {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div
+      data-demo="dashboard-stats"
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+    >
       {cards.map((card) => (
         <Card key={card.title} className={cn("bg-card", card.accent)}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">

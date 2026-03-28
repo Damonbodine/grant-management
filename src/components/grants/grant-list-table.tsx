@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Id } from "@convex/_generated/dataModel";
 import { useAuthedQuery } from "@/hooks/use-authed-query";
+import { withPreservedDemoQuery } from "@/lib/demo";
 
 const STATUS_COLORS: Record<string, string> = {
   Researching: "bg-slate-100 text-slate-700",
@@ -27,6 +28,7 @@ interface GrantListTableProps {
 
 export function GrantListTable({ statusFilter, categoryFilter, searchFilter }: GrantListTableProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const grants = useAuthedQuery(api.grants.listGrants, {
     status: statusFilter && statusFilter !== "all" ? (statusFilter as "Researching" | "Upcoming" | "Open" | "Closed" | "Archived") : undefined,
     category: categoryFilter && categoryFilter !== "all" ? (categoryFilter as "General Operating" | "Program" | "Capital" | "Capacity Building" | "Research" | "Emergency" | "Other") : undefined,
@@ -42,7 +44,7 @@ export function GrantListTable({ statusFilter, categoryFilter, searchFilter }: G
   );
 
   return (
-    <div className="rounded-md border border-border">
+    <div className="rounded-md border border-border" data-demo="grants-table">
       <Table>
         <TableHeader>
           <TableRow>
@@ -75,7 +77,15 @@ export function GrantListTable({ statusFilter, categoryFilter, searchFilter }: G
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => router.push(`/grants/${grant._id}`)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() =>
+                      router.push(
+                        withPreservedDemoQuery(`/grants/${grant._id}`, searchParams),
+                      )
+                    }
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
                   <Button size="icon" variant="ghost" onClick={() => router.push(`/grants/${grant._id}/edit`)}>
