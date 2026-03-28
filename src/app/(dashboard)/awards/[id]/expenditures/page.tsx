@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { ExpenditureListTable } from "@/components/expenditures/expenditure-list-table";
+import { BudgetJustificationWriter } from "@/components/expenditures/budget-justification-writer";
 import { buttonVariants } from "@/components/ui/button-variants";
 
 interface Props {
@@ -20,6 +21,7 @@ export default async function ExpendituresPage({ params }: Props) {
         }
       />
       <ExpenditureListTable awardId={id} />
+      <BudgetJustificationWriter awardId={id} />
     </div>
   );
 }
